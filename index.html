@@ -334,7 +334,7 @@ textarea{resize:vertical; min-height:70px;}
 <div class="overlay hidden" id="exportModal">
   <div class="sheet">
     <div class="sheet-head"><h2>月間予定を出力</h2><button class="close-x" data-close="exportModal">×</button></div>
-    <div style="font-size:12px; color:var(--ink-soft); margin-bottom:10px;">表示中のクラブ・月で「確定」した予定のみを出力します。</div>
+    <div style="font-size:12px; color:var(--ink-soft); margin-bottom:10px;">表示中のクラブ・月の予定を出力します（確定・候補どちらも含みます。状態の列で見分けられます）。</div>
     <div class="export-menu">
       <button class="btn outline block" id="expExcel">📊 エクセルで出力（.xlsx）</button>
       <button class="btn outline block" id="expWord">📝 ワードで出力（.doc）</button>
@@ -1483,32 +1483,39 @@ document.getElementById('roleBtn').addEventListener('click', ()=>{ renderIdentit
 document.getElementById('openStaffBtn').addEventListener('click', ()=>{ renderStaffModal(); document.getElementById('staffModal').classList.remove('hidden'); });
 
 /* ---------- export ---------- */
-function getConfirmedForMonthClub(y,m){
-  return events.filter(e=>{ const d=new Date(e.date+'T00:00:00'); return e.status==='confirmed' && e.clubId===currentClubId && d.getFullYear()===y && d.getMonth()===m; })
+function getEventsForMonthClub(y,m){
+  return events.filter(e=>{ const d=new Date(e.date+'T00:00:00'); return e.clubId===currentClubId && d.getFullYear()===y && d.getMonth()===m; })
     .sort((a,b)=>a.date.localeCompare(b.date));
 }
 function memberLabel(e){
-  return confirmedIdsOf(e).map(id=>{
-    const st = staffById(id); if(!st) return '';
-    if(!e.timeStart){
-      const r = responses.find(x=>x.eventId===e.id && x.staffId===id);
-      if(r && r.timeStart) return `${st.name}(${r.timeStart}-${r.timeEnd})`;
-    }
+  if(e.status==='confirmed'){
+    return confirmedIdsOf(e).map(id=>{
+      const st = staffById(id); if(!st) return '';
+      if(!e.timeStart){
+        const r = responses.find(x=>x.eventId===e.id && x.staffId===id);
+        if(r && r.timeStart) return `${st.name}(${r.timeStart}-${r.timeEnd})`;
+      }
+      return st.name;
+    }).filter(Boolean).join('、') || '（担当未設定）';
+  }
+  return respsForEvent(e.id).map(r=>{
+    const st = staffById(r.staffId); if(!st) return '';
+    if(!e.timeStart && r.timeStart) return `${st.name}(${r.timeStart}-${r.timeEnd})`;
     return st.name;
-  }).filter(Boolean).join('、') || '（担当未設定）';
+  }).filter(Boolean).join('、') || '（登録なし）';
 }
 function buildRows(){
-  return getConfirmedForMonthClub(currentYear, currentMonth).map(e=>{
+  return getEventsForMonthClub(currentYear, currentMonth).map(e=>{
     const d = new Date(e.date+'T00:00:00');
-    return [`${d.getMonth()+1}/${d.getDate()}`, wd(d), e.title||'', e.place||'', timeLabel(e), memberLabel(e), e.note||''];
+    return [`${d.getMonth()+1}/${d.getDate()}`, wd(d), e.status==='confirmed'?'確定':'候補', e.title||'', e.place||'', timeLabel(e), memberLabel(e), e.note||''];
   });
 }
 document.getElementById('exportBtn').addEventListener('click', ()=> document.getElementById('exportModal').classList.remove('hidden'));
 document.getElementById('expExcel').addEventListener('click', ()=>{
   const rows = buildRows();
-  if(rows.length===0){ showToast('確定した予定がありません'); return; }
+  if(rows.length===0){ showToast('出力できる予定がありません'); return; }
   const clubName = (clubById(currentClubId)||{}).name || '';
-  const aoa = [[clubName], ['日付','曜日','題名','場所','時間','担当','メモ'], ...rows];
+  const aoa = [[clubName], ['日付','曜日','状態','題名','場所','時間','担当','メモ'], ...rows];
   const ws = XLSX.utils.aoa_to_sheet(aoa);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, `${currentMonth+1}月`);
@@ -1517,15 +1524,15 @@ document.getElementById('expExcel').addEventListener('click', ()=>{
 });
 document.getElementById('expWord').addEventListener('click', ()=>{
   const rows = buildRows();
-  if(rows.length===0){ showToast('確定した予定がありません'); return; }
+  if(rows.length===0){ showToast('出力できる予定がありません'); return; }
   const clubName = (clubById(currentClubId)||{}).name || '';
   const trs = rows.map(r=>`<tr>${r.map(c=>`<td>${esc(String(c))}</td>`).join('')}</tr>`).join('');
   const html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
     <head><meta charset="utf-8"><title>月間予定</title></head>
     <body style="font-family:'MS PGothic',sans-serif;">
-      <h2>${esc(clubName)}　${currentYear}年${currentMonth+1}月 月間予定（確定分）</h2>
+      <h2>${esc(clubName)}　${currentYear}年${currentMonth+1}月 月間予定（確定・候補）</h2>
       <table border="1" cellspacing="0" cellpadding="5" style="border-collapse:collapse; font-size:11pt;">
-        <tr>${['日付','曜日','題名','場所','時間','担当','メモ'].map(h=>`<th>${h}</th>`).join('')}</tr>
+        <tr>${['日付','曜日','状態','題名','場所','時間','担当','メモ'].map(h=>`<th>${h}</th>`).join('')}</tr>
         ${trs}
       </table>
     </body></html>`;
@@ -1537,12 +1544,12 @@ document.getElementById('expWord').addEventListener('click', ()=>{
 });
 document.getElementById('expPdf').addEventListener('click', ()=>{
   const rows = buildRows();
-  if(rows.length===0){ showToast('確定した予定がありません'); return; }
+  if(rows.length===0){ showToast('出力できる予定がありません'); return; }
   const clubName = (clubById(currentClubId)||{}).name || '';
   const trs = rows.map(r=>`<tr>${r.map(c=>`<td>${esc(String(c))}</td>`).join('')}</tr>`).join('');
   document.getElementById('printArea').innerHTML = `
-    <h2>${esc(clubName)}　${currentYear}年${currentMonth+1}月 月間予定（確定分）</h2>
-    <table><tr>${['日付','曜日','題名','場所','時間','担当','メモ'].map(h=>`<th>${h}</th>`).join('')}</tr>${trs}</table>`;
+    <h2>${esc(clubName)}　${currentYear}年${currentMonth+1}月 月間予定（確定・候補）</h2>
+    <table><tr>${['日付','曜日','状態','題名','場所','時間','担当','メモ'].map(h=>`<th>${h}</th>`).join('')}</tr>${trs}</table>`;
   document.getElementById('exportModal').classList.add('hidden');
   setTimeout(()=>window.print(), 150);
 });
