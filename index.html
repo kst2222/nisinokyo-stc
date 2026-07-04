@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-<title>KST指導シフト調整</title>
+<title>指導シフト調整</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -109,6 +109,7 @@ h1,h2,h3,h4{font-family:'Zen Kaku Gothic New',sans-serif;}
 .event-card{background:var(--panel); border-radius:14px; padding:14px 16px 16px; margin-bottom:14px; box-shadow:0 1px 6px rgba(18,47,57,.05); border-left:7px solid var(--ev-color,var(--navy));}
 .ev-num{display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:900; color:#fff; background:var(--ev-color,var(--navy)); padding:3px 11px; border-radius:20px; margin-bottom:8px;}
 .ev-top{display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:4px;}
+.ev-title-h{font-size:16px; color:var(--ink); font-weight:900; margin-bottom:2px;}
 .ev-time{font-size:19px; color:var(--ink); font-weight:800; margin:2px 0 4px; letter-spacing:.01em;}
 .ev-place{font-size:14px; color:var(--ink-soft); font-weight:700; margin-bottom:8px;}
 .ev-note{font-size:13px; color:var(--ink-soft); margin-bottom:8px;}
@@ -396,7 +397,7 @@ textarea{resize:vertical; min-height:70px;}
    ここに、デプロイしたGoogle Apps ScriptのウェブアプリURLを入れてください。
    （Code.gs を Apps Script に貼り付けて「ウェブアプリとしてデプロイ」した後に出るURL）
    ========================================================================= */
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzCs5NNw2ByQxLeC76XQ6_Tnxx7SEPZ4JuXI5mvSQUw6y7142uskAYkCKgUkDS9mpH5/exec';
+const GAS_URL = 'ここにデプロイURLを貼ってください';
 
 /* -------------------------------------------------------------------------
    簡易的な「見えにくくする」対策（本質的な保護ではありません）
@@ -522,6 +523,21 @@ function loadIdentity(){
 function saveIdentity(){
   try{ localStorage.setItem('shift-identity', JSON.stringify(identity)); }catch(e){}
 }
+/** 再読み込みしても「最後に見ていたクラブ・月」を覚えておく（管理者用。指導者は担当種目に固定） */
+function loadViewPref(){
+  try{
+    const raw = localStorage.getItem('shift-view-pref');
+    if(!raw) return null;
+    return JSON.parse(raw);
+  }catch(e){ return null; }
+}
+function saveViewPref(){
+  try{
+    localStorage.setItem('shift-view-pref', JSON.stringify({
+      sport: currentSport, clubId: currentClubId, year: currentYear, month: currentMonth
+    }));
+  }catch(e){}
+}
 
 /* ---------- helpers ---------- */
 function staffById(id){ return config.staff.find(s=>s.id===id); }
@@ -567,7 +583,7 @@ function renderSportSelector(){
       `<button class="sport-btn ${s.id===currentSport?'active':''}" data-sport="${s.id}">${esc(s.name)}</button>`
     ).join('');
     document.querySelectorAll('#sportRow [data-sport]').forEach(b=> b.addEventListener('click', ()=>{
-      currentSport = b.dataset.sport; ensureCurrentClub();
+      currentSport = b.dataset.sport; ensureCurrentClub(); saveViewPref();
       renderSportSelector(); renderClubRow(); renderMonth(); renderToday();
     }));
   }else{
@@ -583,7 +599,7 @@ function renderClubRow(){
     `<button class="club-chip ${c.id===currentClubId?'active':''}" data-club="${c.id}">${esc(c.name)}</button>`
   ).join('') || '<div class="empty-note">クラブが登録されていません</div>';
   document.querySelectorAll('#clubRow [data-club]').forEach(b=> b.addEventListener('click', ()=>{
-    currentClubId = b.dataset.club;
+    currentClubId = b.dataset.club; saveViewPref();
     renderClubRow(); renderMonth(); renderToday();
   }));
 }
@@ -601,7 +617,7 @@ function renderRequestBanner(){
     const club = clubById(ev.clubId);
     const d = new Date(ev.date+'T00:00:00');
     html += `<div class="request-item">
-      ${esc(club?club.name:'')}<br>${d.getMonth()+1}/${d.getDate()}（${wd(d)}）${esc(timeLabel(ev))}${ev.place?'・'+esc(ev.place):''}
+      ${esc(club?club.name:'')}<br>${d.getMonth()+1}/${d.getDate()}（${wd(d)}）${ev.title?esc(ev.title)+'　':''}${esc(timeLabel(ev))}${ev.place?'・'+esc(ev.place):''}
       <div class="rrow">
         <button class="btn primary" data-ract="ok" data-rid="${r.id}">OKする</button>
         <button class="btn ghost" data-ract="no" data-rid="${r.id}">難しい</button>
@@ -729,7 +745,7 @@ function renderToday(){
       const cnt = e.status==='confirmed' ? confirmedIdsOf(e).length : respsForEvent(e.id).length;
       const short = cnt < need;
       html += `<div style="display:flex; align-items:center; gap:8px; padding:6px 0; border-top:1px solid var(--line);">
-        <div style="flex:1; font-size:12.5px; font-weight:700;">${esc(timeLabel(e))}${e.place?'・'+esc(e.place):''}${mine?'<span class="mine-badge">あなたが担当</span>':''}${short?'<span class="short-badge">人数不足</span>':''}</div>
+        <div style="flex:1; font-size:12.5px; font-weight:700;">${e.title?esc(e.title)+'　':''}${esc(timeLabel(e))}${e.place?'・'+esc(e.place):''}${mine?'<span class="mine-badge">あなたが担当</span>':''}${short?'<span class="short-badge">人数不足</span>':''}</div>
         <span class="badge ${e.status}">${e.status==='confirmed'?'確定':'候補'}</span>
       </div>`;
     });
@@ -765,7 +781,7 @@ function renderMonth(){
         ? confirmedIdsOf(e).map(id=>{const s=staffById(id); return s?s.name.slice(0,2):'';}).join('・') || '確定'
         : `候補`;
       const bg = short ? 'var(--coral)' : (e.color || PALETTE[idx % PALETTE.length]);
-      pills += `<div class="mini-pill" style="background:${bg};">${esc(timeLabel(e).slice(0,5))}:${esc(label)}</div>`;
+      pills += `<div class="mini-pill" style="background:${bg};">${esc((e.title||timeLabel(e)).slice(0,5))}:${esc(label)}</div>`;
     });
     html += `<div class="daycell ${isToday?'today':''}" data-date="${date}"><div class="daynum">${d}</div>${pills}</div>`;
   });
@@ -840,7 +856,7 @@ function openCompare(){
   });
   document.getElementById('compareBody').innerHTML = html;
   document.querySelectorAll('#compareBody [data-goclub]').forEach(b=> b.addEventListener('click', ()=>{
-    currentClubId = b.dataset.goclub; renderClubRow(); renderMonth(); renderToday();
+    currentClubId = b.dataset.goclub; saveViewPref(); renderClubRow(); renderMonth(); renderToday();
     document.getElementById('compareModal').classList.add('hidden');
   }));
   document.getElementById('compareModal').classList.remove('hidden');
@@ -884,6 +900,7 @@ function renderDayModalBody(){
       ${dayEvents.length>1 ? `<div class="ev-num">候補${idx+1}</div>` : ''}
       <div class="ev-top">
         <div>
+          ${e.title ? `<div class="ev-title-h">${esc(e.title)}</div>` : ''}
           <div class="ev-time">🕐 ${esc(timeLabel(e))}</div>
           ${e.place ? `<div class="ev-place">📍 ${esc(e.place)}</div>` : ''}
         </div>
@@ -973,7 +990,8 @@ function renderDayModalBody(){
 function renderNewEventArea(){
   const area = document.getElementById('newEventArea');
   if(!isAdmin()){ area.innerHTML=''; return; }
-  const dayCount = eventsOnDateClub(activeDayDate).length;
+  const dayEvents = eventsOnDateClub(activeDayDate);
+  const dayCount = dayEvents.length;
   const templates = (config.templates||[]).filter(t=>t.clubId===currentClubId);
   const canPaste = dayClipboard && dayClipboard.clubId===currentClubId;
   area.innerHTML = `
@@ -982,28 +1000,43 @@ function renderNewEventArea(){
       ${canPaste ? `<button class="btn outline" id="pasteDayBtn">📥 この日に貼り付け</button>` : ''}
       ${canPaste ? `<button class="btn outline" id="bulkPasteOpenBtn">📥 複数の日に一括貼り付け</button>` : ''}
     </div>
-    ${templates.length ? `<div class="inline-form" style="margin-top:8px;">
-      <select id="templateSel">${templates.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('')}</select>
-      <button class="btn outline" id="useTemplateBtn">テンプレを追加</button>
+    ${templates.length ? `<div class="new-ev-form" style="margin-top:8px;">
+      <div class="sec-label" style="margin-top:0;">テンプレを使う</div>
+      <div class="inline-form">
+        <select id="templateSel">${templates.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('')}</select>
+        <button class="btn outline" id="useTemplateBtn">追加</button>
+        <button class="small-btn danger" id="deleteTemplateBtn">削除</button>
+      </div>
     </div>` : ''}
     <div class="new-ev-form">
       <div class="sec-label" style="margin-top:0;">＋ 候補を追加（この日に複数案OK・目安3件まで）</div>
+      <div class="field"><label>題名</label><input type="text" id="nvTitle" placeholder="例：通常練習、練習試合"></div>
       <div class="field"><label>場所</label><input type="text" id="nvPlace" list="placeList" placeholder="例：体育館、テニスコートA"></div>
       <div class="check-row"><input type="checkbox" id="nvNoTime"> <label for="nvNoTime" style="margin:0;">時間は未定（担当者ごとに登録してもらう）</label></div>
       <div class="two-col" id="nvTimeRow">
         <div class="field"><label>開始</label><input type="time" id="nvStart"></div>
         <div class="field"><label>終了</label><input type="time" id="nvEnd"></div>
       </div>
-      <div class="field"><label>メモ（任意）</label><input type="text" id="nvNote" placeholder="持ち物・注意事項など"></div>
+      <div class="field"><label>メモ（任意・改行できます）</label><textarea id="nvNote" placeholder="持ち物・注意事項など"></textarea></div>
       <div class="field"><label>色（複数候補の見分け用）</label>
         <div class="color-swatches" id="nvColorRow"></div>
       </div>
       <button class="btn primary block" id="addEvBtn">この候補を追加する</button>
-      ${dayCount>0 ? `<div class="inline-form" style="margin-top:8px;">
+    </div>
+    ${dayCount>0 ? `<div class="new-ev-form">
+      <div class="sec-label" style="margin-top:0;">この日の内容をテンプレとして保存</div>
+      <div class="empty-note" style="margin-bottom:6px;">テンプレに入れたいものだけチェックしてください</div>
+      <div id="tplPickList">
+        ${dayEvents.map((e,idx)=>`<label class="check-row" style="display:flex;">
+          <input type="checkbox" class="tplPickChk" data-idx="${idx}" checked>
+          <span>${e.title?esc(e.title)+'／':''}${esc(timeLabel(e))}${e.place?'／'+esc(e.place):''}</span>
+        </label>`).join('')}
+      </div>
+      <div class="inline-form" style="margin-top:6px;">
         <input type="text" id="tplNameInput" placeholder="テンプレ名（例：通常回）">
         <button class="btn ghost" id="saveTemplateBtn">テンプレ保存</button>
-      </div>` : ''}
-    </div>
+      </div>
+    </div>` : ''}
     <datalist id="placeList">${[...new Set(events.filter(e=>e.clubId===currentClubId && e.place).map(e=>e.place))].map(p=>`<option value="${esc(p)}">`).join('')}</datalist>
   `;
   area.dataset.color = PALETTE[dayCount % PALETTE.length];
@@ -1021,29 +1054,33 @@ function renderNewEventArea(){
     document.getElementById('pasteDayBtn').addEventListener('click', pasteDayEvents);
     document.getElementById('bulkPasteOpenBtn').addEventListener('click', openBulkPaste);
   }
-  if(templates.length) document.getElementById('useTemplateBtn').addEventListener('click', useTemplate);
+  if(templates.length){
+    document.getElementById('useTemplateBtn').addEventListener('click', useTemplate);
+    document.getElementById('deleteTemplateBtn').addEventListener('click', deleteTemplate);
+  }
   if(dayCount>0) document.getElementById('saveTemplateBtn').addEventListener('click', saveAsTemplate);
 }
 async function addNewEvent(){
+  const title = document.getElementById('nvTitle').value.trim();
   const place = document.getElementById('nvPlace').value.trim();
   const noTime = document.getElementById('nvNoTime').checked;
   const timeStart = noTime ? '' : (document.getElementById('nvStart').value || '');
   const timeEnd = noTime ? '' : (document.getElementById('nvEnd').value || '');
   const note = document.getElementById('nvNote').value.trim();
   const color = document.getElementById('newEventArea').dataset.color || PALETTE[0];
-  const ev = {id:uid(), clubId:currentClubId, date:activeDayDate, place, timeStart, timeEnd, note, color, status:'open', confirmedIds:[], createdAt:Date.now()};
+  const ev = {id:uid(), clubId:currentClubId, date:activeDayDate, title, place, timeStart, timeEnd, note, color, status:'open', confirmedIds:[], createdAt:Date.now()};
   const ok = await runBusy('登録中…', async ()=>{ await apiPost('addEvent', ev); events.push(ev); });
   if(ok){ renderDayModalBody(); renderNewEventArea(); renderMonth(); renderToday(); showToast('候補を追加しました'); }
 }
 function copyDayEvents(){
-  const items = eventsOnDateClub(activeDayDate).map(e=>({place:e.place, timeStart:e.timeStart, timeEnd:e.timeEnd, note:e.note, color:e.color}));
+  const items = eventsOnDateClub(activeDayDate).map(e=>({title:e.title, place:e.place, timeStart:e.timeStart, timeEnd:e.timeEnd, note:e.note, color:e.color}));
   dayClipboard = {clubId:currentClubId, items};
   showToast('コピーしました');
   renderNewEventArea();
 }
 async function pasteDayEvents(){
   if(!dayClipboard) return;
-  const newEvents = dayClipboard.items.map(it=>({id:uid(), clubId:currentClubId, date:activeDayDate, place:it.place, timeStart:it.timeStart, timeEnd:it.timeEnd, note:it.note, color:it.color, status:'open', confirmedIds:[], createdAt:Date.now()}));
+  const newEvents = dayClipboard.items.map(it=>({id:uid(), clubId:currentClubId, date:activeDayDate, title:it.title, place:it.place, timeStart:it.timeStart, timeEnd:it.timeEnd, note:it.note, color:it.color, status:'open', confirmedIds:[], createdAt:Date.now()}));
   const ok = await runBusy('貼り付け中…', async ()=>{
     await Promise.all(newEvents.map(ev=> apiPost('addEvent', ev)));
     events.push(...newEvents);
@@ -1054,7 +1091,13 @@ async function saveAsTemplate(){
   const input = document.getElementById('tplNameInput');
   const name = input.value.trim();
   if(!name){ showToast('テンプレ名を入力してください'); return; }
-  const items = eventsOnDateClub(activeDayDate).map(e=>({place:e.place, timeStart:e.timeStart, timeEnd:e.timeEnd, note:e.note, color:e.color}));
+  const dayEvents = eventsOnDateClub(activeDayDate);
+  const checked = Array.from(document.querySelectorAll('.tplPickChk:checked')).map(cb=>parseInt(cb.dataset.idx));
+  if(checked.length===0){ showToast('テンプレに入れる候補を選んでください'); return; }
+  const items = checked.map(idx=>{
+    const e = dayEvents[idx];
+    return {title:e.title, place:e.place, timeStart:e.timeStart, timeEnd:e.timeEnd, note:e.note, color:e.color};
+  });
   const tpl = {id:uid(), name, clubId:currentClubId, items, createdAt:Date.now()};
   const ok = await runBusy('保存中…', async ()=>{ await apiPost('addTemplate', tpl); config.templates.push(tpl); });
   if(ok){ input.value=''; renderNewEventArea(); showToast('テンプレとして保存しました'); }
@@ -1062,12 +1105,21 @@ async function saveAsTemplate(){
 async function useTemplate(){
   const tid = document.getElementById('templateSel').value;
   const t = (config.templates||[]).find(x=>x.id===tid); if(!t) return;
-  const newEvents = t.items.map(it=>({id:uid(), clubId:currentClubId, date:activeDayDate, place:it.place, timeStart:it.timeStart, timeEnd:it.timeEnd, note:it.note, color:it.color, status:'open', confirmedIds:[], createdAt:Date.now()}));
+  const newEvents = t.items.map(it=>({id:uid(), clubId:currentClubId, date:activeDayDate, title:it.title, place:it.place, timeStart:it.timeStart, timeEnd:it.timeEnd, note:it.note, color:it.color, status:'open', confirmedIds:[], createdAt:Date.now()}));
   const ok = await runBusy('追加中…', async ()=>{
     await Promise.all(newEvents.map(ev=> apiPost('addEvent', ev)));
     events.push(...newEvents);
   });
   if(ok){ renderDayModalBody(); renderNewEventArea(); renderMonth(); renderToday(); showToast('テンプレから追加しました'); }
+}
+async function deleteTemplate(){
+  const tid = document.getElementById('templateSel').value;
+  const t = (config.templates||[]).find(x=>x.id===tid); if(!t) return;
+  const ok = await runBusy('削除中…', async ()=>{
+    await apiPost('deleteTemplate', {id:tid});
+    config.templates = config.templates.filter(x=>x.id!==tid);
+  });
+  if(ok){ renderNewEventArea(); showToast('テンプレを削除しました'); }
 }
 
 /* ---------- bulk paste ---------- */
@@ -1100,7 +1152,7 @@ document.getElementById('bulkPasteBtn').addEventListener('click', async ()=>{
   const newEvents = [];
   dates.forEach(date=>{
     dayClipboard.items.forEach(it=>{
-      newEvents.push({id:uid(), clubId:currentClubId, date, place:it.place, timeStart:it.timeStart, timeEnd:it.timeEnd, note:it.note, color:it.color, status:'open', confirmedIds:[], createdAt:Date.now()});
+      newEvents.push({id:uid(), clubId:currentClubId, date, title:it.title, place:it.place, timeStart:it.timeStart, timeEnd:it.timeEnd, note:it.note, color:it.color, status:'open', confirmedIds:[], createdAt:Date.now()});
     });
   });
   const ok = await runBusy(`${dates.length}日に貼り付け中…`, async ()=>{
@@ -1184,12 +1236,13 @@ function toggleEditForm(evId){
   if(area.innerHTML){ area.innerHTML=''; return; }
   area.innerHTML = `
     <div class="new-ev-form">
+      <div class="field"><label>題名</label><input type="text" id="edTitle-${evId}" value="${esc(ev.title||'')}"></div>
       <div class="field"><label>場所</label><input type="text" id="edPlace-${evId}" value="${esc(ev.place||'')}"></div>
       <div class="two-col">
         <div class="field"><label>開始</label><input type="time" id="edStart-${evId}" value="${ev.timeStart||''}"></div>
         <div class="field"><label>終了</label><input type="time" id="edEnd-${evId}" value="${ev.timeEnd||''}"></div>
       </div>
-      <div class="field"><label>メモ</label><input type="text" id="edNote-${evId}" value="${esc(ev.note||'')}"></div>
+      <div class="field"><label>メモ（改行できます）</label><textarea id="edNote-${evId}">${esc(ev.note||'')}</textarea></div>
       <div class="field"><label>色</label><div class="color-swatches" id="edColorRow-${evId}"></div></div>
       <button class="btn primary block" id="saveEd-${evId}">保存する</button>
     </div>`;
@@ -1202,6 +1255,7 @@ function toggleEditForm(evId){
   }));
   document.getElementById('saveEd-'+evId).addEventListener('click', async ()=>{
     const patch = {
+      title: document.getElementById('edTitle-'+evId).value.trim(),
       place: document.getElementById('edPlace-'+evId).value.trim(),
       timeStart: document.getElementById('edStart-'+evId).value || '',
       timeEnd: document.getElementById('edEnd-'+evId).value || '',
@@ -1446,7 +1500,7 @@ function memberLabel(e){
 function buildRows(){
   return getConfirmedForMonthClub(currentYear, currentMonth).map(e=>{
     const d = new Date(e.date+'T00:00:00');
-    return [`${d.getMonth()+1}/${d.getDate()}`, wd(d), e.place||'', timeLabel(e), memberLabel(e), e.note||''];
+    return [`${d.getMonth()+1}/${d.getDate()}`, wd(d), e.title||'', e.place||'', timeLabel(e), memberLabel(e), e.note||''];
   });
 }
 document.getElementById('exportBtn').addEventListener('click', ()=> document.getElementById('exportModal').classList.remove('hidden'));
@@ -1454,7 +1508,7 @@ document.getElementById('expExcel').addEventListener('click', ()=>{
   const rows = buildRows();
   if(rows.length===0){ showToast('確定した予定がありません'); return; }
   const clubName = (clubById(currentClubId)||{}).name || '';
-  const aoa = [[clubName], ['日付','曜日','場所','時間','担当','メモ'], ...rows];
+  const aoa = [[clubName], ['日付','曜日','題名','場所','時間','担当','メモ'], ...rows];
   const ws = XLSX.utils.aoa_to_sheet(aoa);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, `${currentMonth+1}月`);
@@ -1471,7 +1525,7 @@ document.getElementById('expWord').addEventListener('click', ()=>{
     <body style="font-family:'MS PGothic',sans-serif;">
       <h2>${esc(clubName)}　${currentYear}年${currentMonth+1}月 月間予定（確定分）</h2>
       <table border="1" cellspacing="0" cellpadding="5" style="border-collapse:collapse; font-size:11pt;">
-        <tr>${['日付','曜日','場所','時間','担当','メモ'].map(h=>`<th>${h}</th>`).join('')}</tr>
+        <tr>${['日付','曜日','題名','場所','時間','担当','メモ'].map(h=>`<th>${h}</th>`).join('')}</tr>
         ${trs}
       </table>
     </body></html>`;
@@ -1488,7 +1542,7 @@ document.getElementById('expPdf').addEventListener('click', ()=>{
   const trs = rows.map(r=>`<tr>${r.map(c=>`<td>${esc(String(c))}</td>`).join('')}</tr>`).join('');
   document.getElementById('printArea').innerHTML = `
     <h2>${esc(clubName)}　${currentYear}年${currentMonth+1}月 月間予定（確定分）</h2>
-    <table><tr>${['日付','曜日','場所','時間','担当','メモ'].map(h=>`<th>${h}</th>`).join('')}</tr>${trs}</table>`;
+    <table><tr>${['日付','曜日','題名','場所','時間','担当','メモ'].map(h=>`<th>${h}</th>`).join('')}</tr>${trs}</table>`;
   document.getElementById('exportModal').classList.add('hidden');
   setTimeout(()=>window.print(), 150);
 });
@@ -1501,8 +1555,8 @@ function switchTab(tab){
   if(tab==='year') renderYear();
 }
 document.querySelectorAll('.tab').forEach(t=> t.addEventListener('click', ()=>switchTab(t.dataset.tab)));
-document.getElementById('prevMonth').addEventListener('click', ()=>{ currentMonth--; if(currentMonth<0){currentMonth=11; currentYear--;} renderMonth(); });
-document.getElementById('nextMonth').addEventListener('click', ()=>{ currentMonth++; if(currentMonth>11){currentMonth=0; currentYear++;} renderMonth(); });
+document.getElementById('prevMonth').addEventListener('click', ()=>{ currentMonth--; if(currentMonth<0){currentMonth=11; currentYear--;} saveViewPref(); renderMonth(); });
+document.getElementById('nextMonth').addEventListener('click', ()=>{ currentMonth++; if(currentMonth>11){currentMonth=0; currentYear++;} saveViewPref(); renderMonth(); });
 document.getElementById('prevYear').addEventListener('click', ()=>{ yearViewYear--; renderYear(); });
 document.getElementById('nextYear').addEventListener('click', ()=>{ yearViewYear++; renderYear(); });
 document.querySelectorAll('[data-close]').forEach(el=> el.addEventListener('click', ()=> document.getElementById(el.dataset.close).classList.add('hidden')));
@@ -1564,6 +1618,14 @@ async function init(){
   if(identity && identity.role==='instructor'){
     const st = staffById(identity.staffId);
     if(st){ currentSport = st.sport || SPORTS[0].id; currentClubId = st.mainClubId || null; }
+  }else{
+    const pref = loadViewPref();
+    if(pref){
+      if(pref.sport) currentSport = pref.sport;
+      if(pref.clubId) currentClubId = pref.clubId;
+      if(typeof pref.year==='number') currentYear = pref.year;
+      if(typeof pref.month==='number') currentMonth = pref.month;
+    }
   }
   ensureCurrentClub();
   document.getElementById('loading').classList.add('hidden');
