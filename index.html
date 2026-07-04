@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-<title>指導シフト調整</title>
+<title>KST指導シフト調整</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -24,15 +24,26 @@ h1,h2,h3,h4{font-family:'Zen Kaku Gothic New',sans-serif;}
 .toprow{display:flex; align-items:center; justify-content:space-between; gap:8px;}
 .eyebrow{font-size:11px; letter-spacing:.14em; opacity:.72; font-weight:600;}
 .topbar h1{font-size:19px; margin:2px 0 10px; font-weight:900;}
+.topright{display:flex; align-items:center; gap:8px;}
 .role-btn{border:none; background:rgba(255,255,255,.16); color:#fff; border-radius:20px; padding:6px 12px; font-size:11.5px; font-weight:700; cursor:pointer; white-space:nowrap;}
+.sync-badge{display:flex; align-items:center; gap:5px; font-size:10.5px; font-weight:700; color:#fff; background:rgba(255,255,255,.14); border-radius:20px; padding:5px 10px;}
+.sync-dot{width:7px; height:7px; border-radius:50%; background:#9be79b;}
+.sync-dot.warn{background:#f3cf6b;}
+.sync-dot.bad{background:#f18b7a;}
 .tabs{display:flex; gap:6px; margin-top:10px;}
 .tab{flex:1; text-align:center; padding:9px 4px; border-radius:10px; font-size:13px; font-weight:700; background:rgba(255,255,255,.10); color:#fff; border:none; cursor:pointer;}
 .tab.active{background:#fff; color:var(--navy-dark);}
 .icon-btn{border:none; background:rgba(255,255,255,.14); color:#fff; border-radius:10px; padding:9px 10px; font-size:12.5px; font-weight:700; cursor:pointer; white-space:nowrap;}
 
+.request-banner{margin:12px 16px 0; background:#FFF3E0; border:1.5px solid var(--amber); border-radius:14px; padding:12px 14px;}
+.request-banner h4{margin:0 0 8px; font-size:12.5px; font-weight:800; color:#9c6a12;}
+.request-item{background:#fff; border-radius:10px; padding:9px 11px; margin-bottom:8px; font-size:12.5px; font-weight:700;}
+.request-item .rrow{display:flex; gap:8px; margin-top:7px;}
+
 .sport-row{display:flex; gap:8px; padding:12px 16px 0;}
 .sport-btn{flex:1; border:none; background:var(--panel); color:var(--ink-soft); border-radius:12px; padding:10px 8px; font-size:13.5px; font-weight:800; cursor:pointer; box-shadow:0 1px 5px rgba(18,47,57,.06);}
 .sport-btn.active{background:var(--navy); color:#fff;}
+.sport-label-fixed{padding:12px 16px 0; font-size:13px; font-weight:800; color:var(--navy);}
 .club-row{display:flex; gap:8px; overflow-x:auto; padding:10px 16px 2px;}
 .club-chip{flex-shrink:0; border:1.5px solid var(--line); background:var(--panel); color:var(--ink); border-radius:20px; padding:8px 14px; font-size:12.5px; font-weight:700; cursor:pointer; white-space:nowrap;}
 .club-chip.active{background:var(--navy); border-color:var(--navy); color:#fff;}
@@ -73,6 +84,8 @@ h1,h2,h3,h4{font-family:'Zen Kaku Gothic New',sans-serif;}
 .daynum{font-size:11.5px; font-weight:800; color:var(--ink-soft);}
 .daycell.today .daynum{color:var(--navy);}
 .mini-pill{font-size:9px; font-weight:700; padding:2px 4px; border-radius:5px; color:#fff; line-height:1.25; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;}
+.daycell.selectable{cursor:pointer;}
+.daycell.picked{outline:3px solid var(--teal); outline-offset:-3px;}
 
 .year-nav{display:flex; align-items:center; justify-content:space-between; padding:14px 16px 4px;}
 .year-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:10px; padding:8px 12px 16px;}
@@ -95,7 +108,8 @@ h1,h2,h3,h4{font-family:'Zen Kaku Gothic New',sans-serif;}
 .event-card{background:var(--panel); border-radius:14px; padding:14px 16px 16px; margin-bottom:14px; box-shadow:0 1px 6px rgba(18,47,57,.05); border-left:7px solid var(--ev-color,var(--navy));}
 .ev-num{display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:900; color:#fff; background:var(--ev-color,var(--navy)); padding:3px 11px; border-radius:20px; margin-bottom:8px;}
 .ev-top{display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:4px;}
-.ev-time{font-size:19px; color:var(--ink); font-weight:800; margin:2px 0 8px; letter-spacing:.01em;}
+.ev-time{font-size:19px; color:var(--ink); font-weight:800; margin:2px 0 4px; letter-spacing:.01em;}
+.ev-place{font-size:14px; color:var(--ink-soft); font-weight:700; margin-bottom:8px;}
 .ev-note{font-size:13px; color:var(--ink-soft); margin-bottom:8px;}
 .badge{font-size:12px; font-weight:800; padding:4px 11px; border-radius:20px; white-space:nowrap;}
 .badge.open{background:var(--amber-soft); color:var(--amber);}
@@ -105,6 +119,9 @@ h1,h2,h3,h4{font-family:'Zen Kaku Gothic New',sans-serif;}
 .warn{background:var(--coral-soft); color:var(--coral); font-size:12.5px; font-weight:700; padding:8px 10px; border-radius:8px; margin-bottom:9px;}
 .warn .sugg{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;}
 .sugg-chip{background:#fff; border:1.5px solid var(--coral); color:var(--coral); border-radius:20px; padding:4px 10px; font-size:11.5px; font-weight:700; cursor:pointer;}
+.req-chip{background:#fff; border:1.5px solid var(--ink-soft); color:var(--ink-soft); border-radius:20px; padding:4px 10px; font-size:11.5px; font-weight:700; display:inline-flex; align-items:center; gap:5px;}
+.req-chip.accepted{border-color:var(--teal); color:var(--teal);}
+.req-chip.declined{border-color:var(--coral); color:var(--coral); text-decoration:line-through;}
 
 body.scale-large .ev-time{font-size:22px;}
 body.scale-large .resp-chip{font-size:13.5px; padding:6px 13px;}
@@ -119,9 +136,9 @@ body.scale-xl .sec-label{font-size:13px;}
 .color-swatches{display:flex; gap:8px; flex-wrap:wrap; margin:4px 0 8px;}
 .swatch{width:28px; height:28px; border-radius:50%; border:2px solid transparent; cursor:pointer;}
 .swatch.active{border-color:var(--ink); box-shadow:0 0 0 2px #fff inset;}
-.align-choice,.mode-choice{display:flex; gap:6px; margin-bottom:8px;}
-.align-choice button,.mode-choice button{flex:1;}
-.align-choice button.active,.mode-choice button.active{background:var(--navy); color:#fff; border-color:var(--navy);}
+.align-choice,.mode-choice,.sport-choice{display:flex; gap:6px; margin-bottom:8px;}
+.align-choice button,.mode-choice button,.sport-choice button{flex:1;}
+.align-choice button.active,.mode-choice button.active,.sport-choice button.active{background:var(--navy); color:#fff; border-color:var(--navy);}
 
 .sec-label{font-size:11px; font-weight:800; color:var(--ink-soft); margin:8px 0 5px;}
 .resp-row{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px;}
@@ -136,7 +153,7 @@ body.scale-xl .sec-label{font-size:13px;}
 .btn.warnbtn{background:var(--coral-soft); color:var(--coral);}
 .btn.block{width:100%; text-align:center;}
 .row-gap{display:flex; gap:8px; flex-wrap:wrap;}
-select,input[type=text],input[type=time],input[type=date],textarea{font-family:inherit; font-size:13px; padding:8px 10px; border-radius:8px; border:1.5px solid var(--line); background:#fff; color:var(--ink); width:100%;}
+select,input[type=text],input[type=time],input[type=date],input[type=password],textarea{font-family:inherit; font-size:13px; padding:8px 10px; border-radius:8px; border:1.5px solid var(--line); background:#fff; color:var(--ink); width:100%;}
 textarea{resize:vertical; min-height:70px;}
 .field{margin-bottom:8px;}
 .field label{font-size:11.5px; font-weight:700; color:var(--ink-soft); display:block; margin-bottom:4px;}
@@ -145,13 +162,15 @@ textarea{resize:vertical; min-height:70px;}
 .check-row{display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:700; color:var(--ink-soft); margin:6px 0;}
 .divider{border-top:1px dashed var(--line); margin:10px 0;}
 
-.staff-row{display:flex; align-items:center; gap:8px; background:var(--panel); border-radius:12px; padding:9px 10px; margin-bottom:7px; flex-wrap:wrap;}
+.staff-row{background:var(--panel); border-radius:12px; padding:10px 12px; margin-bottom:8px;}
+.staff-row-top{display:flex; align-items:center; gap:8px;}
 .staff-row .cdot{width:12px; height:12px; border-radius:50%; flex-shrink:0;}
 .staff-row .nm{flex:1; font-size:13px; font-weight:700;}
+.staff-sub{font-size:10.5px; color:var(--ink-soft); font-weight:600; margin-top:2px;}
 .small-btn{border:none; background:var(--line); border-radius:7px; padding:5px 9px; font-size:11px; font-weight:700; cursor:pointer; color:var(--ink-soft);}
 .small-btn.danger{background:var(--coral-soft); color:var(--coral);}
 .inline-form{display:flex; gap:6px; margin-top:4px;}
-.club-check-panel{width:100%; background:var(--bg); border-radius:10px; padding:8px 10px; margin-top:4px;}
+.club-check-panel{width:100%; background:var(--bg); border-radius:10px; padding:8px 10px; margin-top:8px;}
 .club-check-row{display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; padding:3px 0;}
 .sport-group-label{font-size:10.5px; font-weight:800; color:var(--ink-soft); margin:6px 0 2px;}
 
@@ -161,12 +180,21 @@ textarea{resize:vertical; min-height:70px;}
 .export-menu{display:flex; flex-direction:column; gap:8px;}
 .export-menu button{text-align:left;}
 
-.compare-card{background:var(--panel); border-radius:14px; padding:12px 14px; margin-bottom:10px; box-shadow:0 1px 6px rgba(18,47,57,.05);}
-.compare-card h4{margin:0 0 6px; font-size:13.5px; font-weight:800;}
-.compare-stats{display:flex; gap:8px; font-size:11.5px; font-weight:700;}
-.compare-stats span{padding:3px 9px; border-radius:20px;}
-.compare-upcoming{margin-top:8px; font-size:12px; color:var(--ink-soft);}
+.compare-card{background:var(--panel); border-radius:14px; padding:14px 16px; margin-bottom:12px; box-shadow:0 1px 6px rgba(18,47,57,.05);}
+.compare-card h4{margin:0 0 8px; font-size:14.5px; font-weight:900;}
+.compare-nums{display:flex; gap:10px; margin-bottom:8px;}
+.compare-num{flex:1; text-align:center; border-radius:12px; padding:8px 4px;}
+.compare-num .n{font-size:20px; font-weight:900; display:block;}
+.compare-num .l{font-size:10px; font-weight:700;}
+.compare-bar{display:flex; height:14px; border-radius:8px; overflow:hidden; background:var(--line); margin-bottom:8px;}
+.compare-bar span{height:100%;}
+.compare-upcoming{margin-top:6px; font-size:12px; color:var(--ink-soft);}
 .compare-upcoming div{padding:3px 0; display:flex; align-items:center; gap:6px;}
+
+.bulk-cal{display:grid; grid-template-columns:repeat(7,1fr); gap:4px; padding:4px 0;}
+.bulk-daycell{background:var(--panel); border-radius:8px; min-height:44px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; cursor:pointer; border:1.5px solid var(--line);}
+.bulk-daycell.empty{background:transparent; border:none; cursor:default;}
+.bulk-daycell.picked{background:var(--teal); color:#fff; border-color:var(--teal);}
 
 .toast{position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:var(--navy-dark); color:#fff; padding:9px 16px; border-radius:20px; font-size:12.5px; font-weight:700; z-index:60; opacity:0; transition:.25s; pointer-events:none;}
 .toast.show{opacity:1;}
@@ -194,7 +222,10 @@ textarea{resize:vertical; min-height:70px;}
         <div class="eyebrow">指導シフト調整</div>
         <h1 style="margin-bottom:0;">シフト調整</h1>
       </div>
-      <button class="role-btn" id="roleBtn">あなた: 未設定</button>
+      <div class="topright">
+        <div class="sync-badge hidden" id="syncBadge"><span class="sync-dot" id="syncDot"></span><span id="syncLabel">同期OK</span></div>
+        <button class="role-btn" id="roleBtn">あなた: 未設定</button>
+      </div>
     </div>
     <div class="tabs">
       <button class="tab active" data-tab="month">月間</button>
@@ -206,9 +237,10 @@ textarea{resize:vertical; min-height:70px;}
   <div id="loading" class="loading-screen"><div class="spin"></div><div>読み込み中…</div></div>
 
   <div id="mainContent" class="hidden">
+    <div id="requestBanner"></div>
     <div class="board-wrap" id="boardWrap"></div>
 
-    <div class="sport-row" id="sportRow"></div>
+    <div id="sportSelectorArea"></div>
     <div class="club-row" id="clubRow"></div>
     <div class="compare-link" id="compareLink">同じ種目のクラブ状況を比較する ▾</div>
 
@@ -262,12 +294,9 @@ textarea{resize:vertical; min-height:70px;}
   <div class="sheet">
     <div class="sheet-head"><h2>設定</h2><button class="close-x" data-close="staffModal">×</button></div>
     <div id="displaySettingsArea"></div>
-    <div class="sec-label" style="margin-top:14px;">スタッフ・対応クラブ</div>
+    <div class="sec-label" style="margin-top:14px;">スタッフ（種目・メインクラブ・パスワードは管理者が設定）</div>
     <div id="staffList"></div>
-    <div class="inline-form">
-      <input type="text" id="newStaffName" placeholder="名前を入力">
-      <button class="btn primary" id="addStaffBtn">追加</button>
-    </div>
+    <div class="new-ev-form" id="addStaffForm"></div>
   </div>
 </div>
 
@@ -278,16 +307,17 @@ textarea{resize:vertical; min-height:70px;}
     <div class="identity-card">
       <button class="role-choice" id="showAdminPw">管理者として使う</button>
       <div id="adminPwArea" class="hidden" style="margin-bottom:12px;">
-        <div class="field" style="text-align:left;"><label>管理者パスワード</label><input type="text" id="adminPwInput" placeholder="パスワードを入力"></div>
+        <div class="field" style="text-align:left;"><label>管理者パスワード</label><input type="password" id="adminPwInput" placeholder="パスワードを入力"></div>
         <button class="btn primary block" id="pickAdmin">これで進む</button>
       </div>
       <div class="divider"></div>
-      <div style="font-size:12px; color:var(--ink-soft); font-weight:700; margin-bottom:8px;">指導者として使う場合、あなたの名前を選んでください</div>
+      <div style="font-size:12px; color:var(--ink-soft); font-weight:700; margin-bottom:8px;">指導者として使う場合、名前を選んでパスワードを入力してください</div>
       <div id="instructorPickList" style="margin-bottom:10px;"></div>
-      <div class="inline-form">
-        <input type="text" id="quickAddName" placeholder="名前が無ければ入力して追加">
-        <button class="btn outline" id="quickAddBtn">追加して選択</button>
+      <div id="instructorPwArea" class="hidden">
+        <div class="field" style="text-align:left;"><label id="instructorPwLabel">パスワード</label><input type="password" id="instructorPwInput" placeholder="パスワードを入力"></div>
+        <button class="btn primary block" id="pickInstructorBtn">これで進む</button>
       </div>
+      <div class="empty-note" style="margin-top:8px;">自分の名前が無い場合は管理者に登録を依頼してください</div>
     </div>
   </div>
 </div>
@@ -336,6 +366,22 @@ textarea{resize:vertical; min-height:70px;}
   </div>
 </div>
 
+<!-- Bulk paste modal -->
+<div class="overlay hidden" id="bulkPasteModal">
+  <div class="sheet">
+    <div class="sheet-head"><h2>コピー先を選ぶ</h2><button class="close-x" data-close="bulkPasteModal">×</button></div>
+    <div class="empty-note" style="margin-bottom:8px;">貼り付けたい日をタップして選んでください（複数選択できます）</div>
+    <div class="month-nav">
+      <button class="nav-btn" id="bulkPrevMonth">‹</button>
+      <div class="mtitle" id="bulkMonthTitle"></div>
+      <button class="nav-btn" id="bulkNextMonth">›</button>
+    </div>
+    <div class="weekdays"><div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div></div>
+    <div class="bulk-cal" id="bulkCal"></div>
+    <button class="btn primary block" id="bulkPasteBtn" style="margin-top:10px;">選んだ日に貼り付ける</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -352,16 +398,22 @@ const DEFAULT_CLUBS = [
 let config = {staff:[], clubs:[], display:{fontScale:'normal'}, board:[], templates:[]};
 let events = [];
 let responses = [];
+let requests = [];
 let identity = null; // {role:'admin'|'instructor', staffId}
 let currentSport = SPORTS[0].id;
 let currentClubId = null;
 let currentMonth = new Date().getMonth(), currentYear = new Date().getFullYear();
 let yearViewYear = new Date().getFullYear();
 let activeDayDate = null;
-let pollTimer = null;
+let pollTimer = null, tickTimer = null;
 let dayClipboard = null; // {clubId, items:[...]}
 let expandedBoardIds = new Set();
 let editingBoardId = null;
+let pendingInstructorId = null;
+let bulkCalMonth = new Date().getMonth(), bulkCalYear = new Date().getFullYear();
+let bulkPicked = new Set();
+let lastPollSuccessAt = Date.now();
+let lastPollAttemptFailed = false;
 
 const pad = n => String(n).padStart(2,'0');
 const dstr = (y,m,d) => `${y}-${pad(m+1)}-${pad(d)}`;
@@ -377,24 +429,61 @@ function isModalInputFocused(modalEl){
 }
 
 /* ---------- storage ---------- */
-async function loadShared(){
-  try{ const r = await window.storage.get('sch-config', true); config = r ? JSON.parse(r.value) : null; }
-  catch(e){ config = null; }
-  if(!config) config = {};
-  if(!config.staff) config.staff = [];
-  if(!config.clubs || config.clubs.length===0) config.clubs = JSON.parse(JSON.stringify(DEFAULT_CLUBS));
-  if(!config.display) config.display = {fontScale:'normal'};
-  if(!config.board) config.board = [];
-  if(!config.templates) config.templates = [];
-  applyDisplaySettings();
-  try{ const r = await window.storage.get('sch-events', true); events = r ? JSON.parse(r.value) : []; }
-  catch(e){ events = []; }
-  try{ const r = await window.storage.get('sch-responses', true); responses = r ? JSON.parse(r.value) : []; }
-  catch(e){ responses = []; }
+const lastWriteAt = {config:0, events:0, responses:0, requests:0};
+const WRITE_GUARD_MS = 6000;
+const MERGE_RECENT_MS = 20000;
+function mergeRecent(freshArr, localArr){
+  const now = Date.now();
+  const freshIds = new Set((freshArr||[]).map(x=>x.id));
+  const extra = (localArr||[]).filter(x=> x && x.id && !freshIds.has(x.id) && x.createdAt && (now - x.createdAt) < MERGE_RECENT_MS);
+  return (freshArr||[]).concat(extra);
 }
-async function saveConfig(){ try{ await window.storage.set('sch-config', JSON.stringify(config), true); }catch(e){ showToast('保存に失敗しました'); } }
-async function saveEvents(){ try{ await window.storage.set('sch-events', JSON.stringify(events), true); }catch(e){ showToast('保存に失敗しました'); } }
-async function saveResponses(){ try{ await window.storage.set('sch-responses', JSON.stringify(responses), true); }catch(e){ showToast('保存に失敗しました'); } }
+async function loadShared(){
+  if(Date.now() - lastWriteAt.config > WRITE_GUARD_MS){
+    const prevConfig = config;
+    let cfg = null;
+    try{ const r = await window.storage.get('sch-config', true); cfg = r ? JSON.parse(r.value) : null; }
+    catch(e){ cfg = null; }
+    if(!cfg) cfg = {};
+    if(!cfg.staff) cfg.staff = [];
+    if(!cfg.clubs || cfg.clubs.length===0) cfg.clubs = JSON.parse(JSON.stringify(DEFAULT_CLUBS));
+    if(!cfg.display) cfg.display = {fontScale:'normal'};
+    if(!cfg.board) cfg.board = [];
+    if(!cfg.templates) cfg.templates = [];
+    if(prevConfig){
+      cfg.staff = mergeRecent(cfg.staff, prevConfig.staff);
+      cfg.board = mergeRecent(cfg.board, prevConfig.board);
+      cfg.templates = mergeRecent(cfg.templates, prevConfig.templates);
+    }
+    config = cfg;
+    applyDisplaySettings();
+  }
+  if(Date.now() - lastWriteAt.events > WRITE_GUARD_MS){
+    const prevEvents = events;
+    let evs = [];
+    try{ const r = await window.storage.get('sch-events', true); evs = r ? JSON.parse(r.value) : []; }
+    catch(e){ evs = []; }
+    events = mergeRecent(evs, prevEvents);
+  }
+  if(Date.now() - lastWriteAt.responses > WRITE_GUARD_MS){
+    const prevResponses = responses;
+    let resp = [];
+    try{ const r = await window.storage.get('sch-responses', true); resp = r ? JSON.parse(r.value) : []; }
+    catch(e){ resp = []; }
+    responses = mergeRecent(resp, prevResponses);
+  }
+  if(Date.now() - lastWriteAt.requests > WRITE_GUARD_MS){
+    const prevRequests = requests;
+    let reqs = [];
+    try{ const r = await window.storage.get('sch-requests', true); reqs = r ? JSON.parse(r.value) : []; }
+    catch(e){ reqs = []; }
+    requests = mergeRecent(reqs, prevRequests);
+  }
+}
+async function saveConfig(){ lastWriteAt.config = Date.now(); try{ await window.storage.set('sch-config', JSON.stringify(config), true); }catch(e){ showToast('保存に失敗しました'); } }
+async function saveEvents(){ lastWriteAt.events = Date.now(); try{ await window.storage.set('sch-events', JSON.stringify(events), true); }catch(e){ showToast('保存に失敗しました'); } }
+async function saveResponses(){ lastWriteAt.responses = Date.now(); try{ await window.storage.set('sch-responses', JSON.stringify(responses), true); }catch(e){ showToast('保存に失敗しました'); } }
+async function saveRequests(){ lastWriteAt.requests = Date.now(); try{ await window.storage.set('sch-requests', JSON.stringify(requests), true); }catch(e){ showToast('保存に失敗しました'); } }
 
 async function loadIdentity(){
   try{ const r = await window.storage.get('my-identity', false); identity = r ? JSON.parse(r.value) : null; }
@@ -409,10 +498,11 @@ function clubsBySport(sport){ return config.clubs.filter(c=>c.sport===sport); }
 function isAdmin(){ return identity && identity.role==='admin'; }
 function myStaffId(){ return identity && identity.role==='instructor' ? identity.staffId : null; }
 function myStaff(){ const id = myStaffId(); return id ? staffById(id) : null; }
-function myClubIds(){ const st = myStaff(); return st && st.clubIds ? st.clubIds : []; }
-function eventsOnDateAllClubs(date){ return events.filter(e=>e.date===date); }
+function effectiveClubIds(staff){ return staff ? Array.from(new Set([...(staff.clubIds||[]), staff.mainClubId].filter(Boolean))) : []; }
+function myClubIds(){ return effectiveClubIds(myStaff()); }
 function eventsOnDateClub(date){ return events.filter(e=>e.date===date && e.clubId===currentClubId); }
 function respsForEvent(evId){ return responses.filter(r=>r.eventId===evId); }
+function reqsForEvent(evId){ return requests.filter(r=>r.eventId===evId); }
 function myResponse(evId){ const sid = myStaffId(); return sid ? responses.find(r=>r.eventId===evId && r.staffId===sid) : null; }
 function timeLabel(e){ return e.timeStart ? `${e.timeStart}〜${e.timeEnd||''}` : '時間未定（担当者ごとに登録）'; }
 function requiredFor(clubId){ const c = clubById(clubId); return (c && c.requiredCount) || 2; }
@@ -426,26 +516,32 @@ function ensureCurrentClub(){
   const list = clubsBySport(currentSport);
   if(!list.find(c=>c.id===currentClubId)) currentClubId = list.length ? list[0].id : null;
 }
-/* staff from sister clubs (same sport, different club) capable of helping */
 function crossClubCandidates(clubId, excludeIds){
   const c = clubById(clubId); if(!c) return [];
   excludeIds = excludeIds || [];
-  return config.staff.filter(s=>
-    !(s.clubIds||[]).includes(clubId) &&
-    (s.clubIds||[]).some(cid=>{ const cc = clubById(cid); return cc && cc.sport===c.sport; }) &&
-    !excludeIds.includes(s.id)
-  );
+  return config.staff.filter(s=>{
+    const eff = effectiveClubIds(s);
+    return !eff.includes(clubId) && eff.some(cid=>{ const cc = clubById(cid); return cc && cc.sport===c.sport; }) && !excludeIds.includes(s.id);
+  });
 }
 
 /* ---------- sport / club selectors ---------- */
-function renderSportRow(){
-  document.getElementById('sportRow').innerHTML = SPORTS.map(s=>
-    `<button class="sport-btn ${s.id===currentSport?'active':''}" data-sport="${s.id}">${esc(s.name)}</button>`
-  ).join('');
-  document.querySelectorAll('#sportRow [data-sport]').forEach(b=> b.addEventListener('click', ()=>{
-    currentSport = b.dataset.sport; ensureCurrentClub();
-    renderSportRow(); renderClubRow(); renderMonth(); renderToday();
-  }));
+function renderSportSelector(){
+  const area = document.getElementById('sportSelectorArea');
+  if(isAdmin()){
+    area.innerHTML = `<div class="sport-row" id="sportRow"></div>`;
+    document.getElementById('sportRow').innerHTML = SPORTS.map(s=>
+      `<button class="sport-btn ${s.id===currentSport?'active':''}" data-sport="${s.id}">${esc(s.name)}</button>`
+    ).join('');
+    document.querySelectorAll('#sportRow [data-sport]').forEach(b=> b.addEventListener('click', ()=>{
+      currentSport = b.dataset.sport; ensureCurrentClub();
+      renderSportSelector(); renderClubRow(); renderMonth(); renderToday();
+    }));
+  }else{
+    const st = myStaff();
+    const sportName = st && st.sport ? (SPORTS.find(s=>s.id===st.sport)||{}).name : '';
+    area.innerHTML = `<div class="sport-label-fixed">担当種目：${esc(sportName||'未設定')}</div>`;
+  }
 }
 function renderClubRow(){
   ensureCurrentClub();
@@ -456,6 +552,45 @@ function renderClubRow(){
   document.querySelectorAll('#clubRow [data-club]').forEach(b=> b.addEventListener('click', ()=>{
     currentClubId = b.dataset.club;
     renderClubRow(); renderMonth(); renderToday();
+  }));
+}
+
+/* ---------- request banner (instructor: requests directed at me) ---------- */
+function renderRequestBanner(){
+  const wrap = document.getElementById('requestBanner');
+  const sid = myStaffId();
+  if(!sid){ wrap.innerHTML=''; return; }
+  const mine = requests.filter(r=>r.staffId===sid && r.status==='pending');
+  if(mine.length===0){ wrap.innerHTML=''; return; }
+  let html = `<div class="request-banner"><h4>依頼が来ています（${mine.length}件）</h4>`;
+  mine.forEach(r=>{
+    const ev = events.find(e=>e.id===r.eventId); if(!ev) return;
+    const club = clubById(ev.clubId);
+    const d = new Date(ev.date+'T00:00:00');
+    html += `<div class="request-item">
+      ${esc(club?club.name:'')}<br>${d.getMonth()+1}/${d.getDate()}（${wd(d)}）${esc(timeLabel(ev))}${ev.place?'・'+esc(ev.place):''}
+      <div class="rrow">
+        <button class="btn primary" data-ract="ok" data-rid="${r.id}">OKする</button>
+        <button class="btn ghost" data-ract="no" data-rid="${r.id}">難しい</button>
+      </div>
+    </div>`;
+  });
+  html += `</div>`;
+  wrap.innerHTML = html;
+  wrap.querySelectorAll('[data-ract]').forEach(el=> el.addEventListener('click', async ()=>{
+    const rid = el.dataset.rid; const act = el.dataset.ract;
+    const req = requests.find(r=>r.id===rid); if(!req) return;
+    if(act==='ok'){
+      responses.push({id:uid(), eventId:req.eventId, staffId:req.staffId, timeStart:null, timeEnd:null, createdAt:Date.now()});
+      req.status = 'accepted';
+      await saveResponses(); await saveRequests();
+      showToast('OKを送りました');
+    }else{
+      req.status = 'declined';
+      await saveRequests();
+      showToast('お断りしました');
+    }
+    renderRequestBanner(); renderDayModalBody(); renderMonth(); renderToday();
   }));
 }
 
@@ -551,7 +686,7 @@ function renderToday(){
       const cnt = e.status==='confirmed' ? (e.confirmedIds||[]).length : respsForEvent(e.id).length;
       const short = cnt < need;
       html += `<div style="display:flex; align-items:center; gap:8px; padding:6px 0; border-top:1px solid var(--line);">
-        <div style="flex:1; font-size:12.5px; font-weight:700;">${esc(timeLabel(e))}${mine?'<span class="mine-badge">あなたが担当</span>':''}${short?'<span class="short-badge">人数不足</span>':''}</div>
+        <div style="flex:1; font-size:12.5px; font-weight:700;">${esc(timeLabel(e))}${e.place?'・'+esc(e.place):''}${mine?'<span class="mine-badge">あなたが担当</span>':''}${short?'<span class="short-badge">人数不足</span>':''}</div>
         <span class="badge ${e.status}">${e.status==='confirmed'?'確定':'候補'}</span>
       </div>`;
     });
@@ -635,17 +770,22 @@ function openCompare(){
   list.forEach(c=>{
     const clubEvents = events.filter(e=>e.clubId===c.id);
     const monthEvents = clubEvents.filter(e=>{ const d=new Date(e.date+'T00:00:00'); return d.getFullYear()===currentYear && d.getMonth()===currentMonth; });
-    const openCount = monthEvents.filter(e=>e.status==='open').length;
-    const confirmedCount = monthEvents.filter(e=>e.status==='confirmed').length;
+    const openCount = monthEvents.filter(e=>e.status==='open' && (e.status==='confirmed'?(e.confirmedIds||[]).length:respsForEvent(e.id).length) >= requiredFor(c.id)).length;
     const shortCount = monthEvents.filter(e=>{ const cnt = e.status==='confirmed'?(e.confirmedIds||[]).length:respsForEvent(e.id).length; return cnt < requiredFor(c.id); }).length;
+    const confirmedCount = monthEvents.filter(e=>e.status==='confirmed').length - monthEvents.filter(e=>e.status==='confirmed' && (e.confirmedIds||[]).length < requiredFor(c.id)).length;
+    const total = Math.max(monthEvents.length, 1);
+    const okPct = Math.round((confirmedCount/total)*100);
+    const openPct = Math.round((openCount/total)*100);
+    const shortPct = Math.max(0, 100-okPct-openPct);
     const upcoming = clubEvents.filter(e=>e.date>=todayD).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,3);
     html += `<div class="compare-card">
       <h4>${esc(c.name)}</h4>
-      <div class="compare-stats">
-        <span style="background:var(--amber-soft); color:var(--amber);">候補${openCount}</span>
-        <span style="background:var(--teal-soft); color:var(--teal);">確定${confirmedCount}</span>
-        <span style="background:var(--coral-soft); color:var(--coral);">不足${shortCount}</span>
+      <div class="compare-nums">
+        <div class="compare-num" style="background:var(--teal-soft); color:var(--teal);"><span class="n">${confirmedCount}</span><span class="l">確定</span></div>
+        <div class="compare-num" style="background:var(--amber-soft); color:var(--amber);"><span class="n">${openCount}</span><span class="l">候補（充足）</span></div>
+        <div class="compare-num" style="background:var(--coral-soft); color:var(--coral);"><span class="n">${shortCount}</span><span class="l">人数不足</span></div>
       </div>
+      <div class="compare-bar"><span style="width:${okPct}%; background:var(--teal);"></span><span style="width:${openPct}%; background:var(--amber);"></span><span style="width:${shortPct}%; background:var(--coral);"></span></div>
       <div class="compare-upcoming">
         ${upcoming.length ? upcoming.map(e=>{
           const d = new Date(e.date+'T00:00:00');
@@ -688,19 +828,21 @@ function renderDayModalBody(){
   let html = '';
   dayEvents.forEach((e,idx)=>{
     const resps = respsForEvent(e.id);
+    const evReqs = reqsForEvent(e.id);
     const mySid = myStaffId();
     const myResp = myResponse(e.id);
     const color = e.color || PALETTE[idx % PALETTE.length];
     const need = requiredFor(e.clubId);
     const curCount = e.status==='confirmed' ? (e.confirmedIds||[]).length : resps.length;
     const short = curCount < need;
-    const canRespond = isAdmin() || (mySid && (myClubIds().includes(e.clubId)));
+    const canRespond = isAdmin() || (mySid && myClubIds().includes(e.clubId));
 
     html += `<div class="event-card" data-ev="${e.id}" style="--ev-color:${color};">
       ${dayEvents.length>1 ? `<div class="ev-num">候補${idx+1}</div>` : ''}
       <div class="ev-top">
         <div>
           <div class="ev-time">🕐 ${esc(timeLabel(e))}</div>
+          ${e.place ? `<div class="ev-place">📍 ${esc(e.place)}</div>` : ''}
         </div>
         <div style="text-align:right;">
           <span class="badge ${e.status}">${e.status==='confirmed'?'確定':'候補'}</span>
@@ -714,10 +856,21 @@ function renderDayModalBody(){
       <div id="editArea-${e.id}"></div>`;
 
     if(short){
-      const sugg = crossClubCandidates(e.clubId, resps.map(r=>r.staffId)).slice(0,6);
-      html += `<div class="warn">必要人数（${need}人）に対して現在${curCount}人です。
-        ${sugg.length ? `<div class="sugg">${sugg.map(s=>`<button class="sugg-chip" data-act="crossAdd" data-ev="${e.id}" data-staff="${s.id}">${esc(s.name)}に依頼して追加</button>`).join('')}</div>` : ''}
-      </div>`;
+      const reqStaffIds = evReqs.filter(r=>r.status!=='declined').map(r=>r.staffId);
+      const sugg = crossClubCandidates(e.clubId, [...resps.map(r=>r.staffId), ...reqStaffIds]).slice(0,6);
+      html += `<div class="warn">必要人数（${need}人）に対して現在${curCount}人です。`;
+      if(evReqs.length){
+        html += `<div class="sugg">${evReqs.map(r=>{
+          const s = staffById(r.staffId); if(!s) return '';
+          const cls = r.status==='accepted'?'accepted':(r.status==='declined'?'declined':'');
+          const label = r.status==='accepted'?'OK':(r.status==='declined'?'難しい':'回答待ち');
+          return `<span class="req-chip ${cls}">${esc(s.name)}：${label}</span>`;
+        }).join('')}</div>`;
+      }
+      if(sugg.length){
+        html += `<div class="sugg">${sugg.map(s=>`<button class="sugg-chip" data-act="sendRequest" data-ev="${e.id}" data-staff="${s.id}">${esc(s.name)}に依頼する</button>`).join('')}</div>`;
+      }
+      html += `</div>`;
     }
 
     html += `<div class="sec-label">指導できる人</div><div class="resp-row">`;
@@ -725,18 +878,17 @@ function renderDayModalBody(){
       const st = staffById(r.staffId); if(!st) return;
       const isConfirmed = e.status==='confirmed' && (e.confirmedIds||[]).includes(r.staffId);
       const timeTxt = (!e.timeStart && r.timeStart) ? ` (${r.timeStart}-${r.timeEnd})` : '';
-      const canRemove = isAdmin() || (r.staffId===mySid && e.status!=='confirmed');
       html += `<span class="resp-chip ${r.staffId===mySid?'mine':''} ${isConfirmed?'confirmed-pick':''}">${esc(st.name)}${timeTxt}
-        ${canRemove ? `<button data-act="rmResp" data-resp="${r.id}" data-ev="${e.id}">×</button>` : ''}
+        ${isAdmin() ? `<button data-act="rmResp" data-resp="${r.id}" data-ev="${e.id}">×</button>` : ''}
       </span>`;
     });
     if(resps.length===0) html += `<span class="empty-note">まだ登録がありません</span>`;
     html += `</div>`;
 
-    /* instructor self-registration */
+    /* instructor self-registration (the only self-service actions) */
     if(!isAdmin() && mySid){
       if(!canRespond){
-        html += `<div class="empty-note">このクラブには対応登録されていません（設定から追加できます）</div>`;
+        html += `<div class="empty-note">このクラブには対応登録されていません（設定は管理者にご依頼ください）</div>`;
       }else if(e.status==='confirmed'){
         if((e.confirmedIds||[]).includes(mySid)) html += `<div class="empty-note" style="color:var(--teal); font-weight:700;">あなたが担当として確定しています</div>`;
       }else if(!myResp){
@@ -766,7 +918,7 @@ function renderDayModalBody(){
           <button class="btn primary" data-act="confirmEv" data-ev="${e.id}">${e.status==='confirmed'?'確定内容を更新':'この内容で確定する'}</button>
           ${e.status==='confirmed' ? `<button class="btn ghost" data-act="reopenEv" data-ev="${e.id}">候補に戻す</button>` : ''}
         </div>
-        <div class="sec-label" style="margin-top:10px;">他のスタッフを登録に追加</div>
+        <div class="sec-label" style="margin-top:10px;">他のスタッフを直接登録に追加（同意確認なし）</div>
         <div class="inline-form">
           <select id="addRespSel-${e.id}">${staffOptionsHtml(resps.map(r=>r.staffId))}</select>
           <button class="btn outline" data-act="adminAddResp" data-ev="${e.id}">追加</button>
@@ -786,7 +938,8 @@ function renderNewEventArea(){
   area.innerHTML = `
     <div class="row-gap" style="margin-top:8px;">
       ${dayCount>0 ? `<button class="btn outline" id="copyDayBtn">📋 この日の内容をコピー</button>` : ''}
-      ${canPaste ? `<button class="btn outline" id="pasteDayBtn">📥 コピーした内容を貼り付け</button>` : ''}
+      ${canPaste ? `<button class="btn outline" id="pasteDayBtn">📥 この日に貼り付け</button>` : ''}
+      ${canPaste ? `<button class="btn outline" id="bulkPasteOpenBtn">📥 複数の日に一括貼り付け</button>` : ''}
     </div>
     ${templates.length ? `<div class="inline-form" style="margin-top:8px;">
       <select id="templateSel">${templates.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('')}</select>
@@ -794,6 +947,7 @@ function renderNewEventArea(){
     </div>` : ''}
     <div class="new-ev-form">
       <div class="sec-label" style="margin-top:0;">＋ 候補を追加（この日に複数案OK・目安3件まで）</div>
+      <div class="field"><label>場所</label><input type="text" id="nvPlace" list="placeList" placeholder="例：体育館、テニスコートA"></div>
       <div class="check-row"><input type="checkbox" id="nvNoTime"> <label for="nvNoTime" style="margin:0;">時間は未定（担当者ごとに登録してもらう）</label></div>
       <div class="two-col" id="nvTimeRow">
         <div class="field"><label>開始</label><input type="time" id="nvStart"></div>
@@ -809,6 +963,7 @@ function renderNewEventArea(){
         <button class="btn ghost" id="saveTemplateBtn">テンプレ保存</button>
       </div>` : ''}
     </div>
+    <datalist id="placeList">${[...new Set(events.filter(e=>e.clubId===currentClubId && e.place).map(e=>e.place))].map(p=>`<option value="${esc(p)}">`).join('')}</datalist>
   `;
   area.dataset.color = PALETTE[dayCount % PALETTE.length];
   document.getElementById('nvColorRow').innerHTML = PALETTE.map(c=>`<span class="swatch ${c===area.dataset.color?'active':''}" style="background:${c}" data-c="${c}"></span>`).join('');
@@ -821,30 +976,35 @@ function renderNewEventArea(){
   });
   document.getElementById('addEvBtn').addEventListener('click', addNewEvent);
   if(dayCount>0) document.getElementById('copyDayBtn').addEventListener('click', copyDayEvents);
-  if(canPaste) document.getElementById('pasteDayBtn').addEventListener('click', pasteDayEvents);
+  if(canPaste){
+    document.getElementById('pasteDayBtn').addEventListener('click', pasteDayEvents);
+    document.getElementById('bulkPasteOpenBtn').addEventListener('click', openBulkPaste);
+  }
   if(templates.length) document.getElementById('useTemplateBtn').addEventListener('click', useTemplate);
   if(dayCount>0) document.getElementById('saveTemplateBtn').addEventListener('click', saveAsTemplate);
-}async function addNewEvent(){
+}
+async function addNewEvent(){
+  const place = document.getElementById('nvPlace').value.trim();
   const noTime = document.getElementById('nvNoTime').checked;
   const timeStart = noTime ? null : (document.getElementById('nvStart').value || null);
   const timeEnd = noTime ? null : (document.getElementById('nvEnd').value || null);
   const note = document.getElementById('nvNote').value.trim();
   const color = document.getElementById('newEventArea').dataset.color || PALETTE[0];
-  events.push({id:uid(), clubId:currentClubId, date:activeDayDate, timeStart, timeEnd, note, color, status:'open', confirmedIds:[], createdAt:Date.now()});
+  events.push({id:uid(), clubId:currentClubId, date:activeDayDate, place, timeStart, timeEnd, note, color, status:'open', confirmedIds:[], createdAt:Date.now()});
   await saveEvents();
   renderDayModalBody(); renderNewEventArea(); renderMonth(); renderToday();
   showToast('候補を追加しました');
 }
 function copyDayEvents(){
-  const items = eventsOnDateClub(activeDayDate).map(e=>({timeStart:e.timeStart, timeEnd:e.timeEnd, note:e.note, color:e.color}));
+  const items = eventsOnDateClub(activeDayDate).map(e=>({place:e.place, timeStart:e.timeStart, timeEnd:e.timeEnd, note:e.note, color:e.color}));
   dayClipboard = {clubId:currentClubId, items};
-  showToast('コピーしました。別の日を開いて貼り付けできます');
+  showToast('コピーしました');
   renderNewEventArea();
 }
 async function pasteDayEvents(){
   if(!dayClipboard) return;
   dayClipboard.items.forEach(it=>{
-    events.push({id:uid(), clubId:currentClubId, date:activeDayDate, timeStart:it.timeStart, timeEnd:it.timeEnd, note:it.note, color:it.color, status:'open', confirmedIds:[], createdAt:Date.now()});
+    events.push({id:uid(), clubId:currentClubId, date:activeDayDate, place:it.place, timeStart:it.timeStart, timeEnd:it.timeEnd, note:it.note, color:it.color, status:'open', confirmedIds:[], createdAt:Date.now()});
   });
   await saveEvents();
   renderDayModalBody(); renderNewEventArea(); renderMonth(); renderToday();
@@ -854,7 +1014,7 @@ async function saveAsTemplate(){
   const input = document.getElementById('tplNameInput');
   const name = input.value.trim();
   if(!name){ showToast('テンプレ名を入力してください'); return; }
-  const items = eventsOnDateClub(activeDayDate).map(e=>({timeStart:e.timeStart, timeEnd:e.timeEnd, note:e.note, color:e.color}));
+  const items = eventsOnDateClub(activeDayDate).map(e=>({place:e.place, timeStart:e.timeStart, timeEnd:e.timeEnd, note:e.note, color:e.color}));
   config.templates.push({id:uid(), name, clubId:currentClubId, items, createdAt:Date.now()});
   await saveConfig();
   input.value='';
@@ -865,12 +1025,50 @@ async function useTemplate(){
   const tid = document.getElementById('templateSel').value;
   const t = (config.templates||[]).find(x=>x.id===tid); if(!t) return;
   t.items.forEach(it=>{
-    events.push({id:uid(), clubId:currentClubId, date:activeDayDate, timeStart:it.timeStart, timeEnd:it.timeEnd, note:it.note, color:it.color, status:'open', confirmedIds:[], createdAt:Date.now()});
+    events.push({id:uid(), clubId:currentClubId, date:activeDayDate, place:it.place, timeStart:it.timeStart, timeEnd:it.timeEnd, note:it.note, color:it.color, status:'open', confirmedIds:[], createdAt:Date.now()});
   });
   await saveEvents();
   renderDayModalBody(); renderNewEventArea(); renderMonth(); renderToday();
   showToast('テンプレから追加しました');
 }
+
+/* ---------- bulk paste ---------- */
+function openBulkPaste(){
+  bulkCalMonth = currentMonth; bulkCalYear = currentYear; bulkPicked = new Set();
+  renderBulkCal();
+  document.getElementById('bulkPasteModal').classList.remove('hidden');
+}
+function renderBulkCal(){
+  document.getElementById('bulkMonthTitle').textContent = `${bulkCalYear}年 ${bulkCalMonth+1}月`;
+  const cells = getMonthMatrix(bulkCalYear, bulkCalMonth);
+  let html = '';
+  cells.forEach(d=>{
+    if(d===null){ html += `<div class="bulk-daycell empty"></div>`; return; }
+    const date = dstr(bulkCalYear, bulkCalMonth, d);
+    html += `<div class="bulk-daycell ${bulkPicked.has(date)?'picked':''}" data-date="${date}">${d}</div>`;
+  });
+  document.getElementById('bulkCal').innerHTML = html;
+  document.querySelectorAll('#bulkCal [data-date]').forEach(el=> el.addEventListener('click', ()=>{
+    const dt = el.dataset.date;
+    bulkPicked.has(dt) ? bulkPicked.delete(dt) : bulkPicked.add(dt);
+    renderBulkCal();
+  }));
+}
+document.getElementById('bulkPrevMonth').addEventListener('click', ()=>{ bulkCalMonth--; if(bulkCalMonth<0){bulkCalMonth=11; bulkCalYear--;} renderBulkCal(); });
+document.getElementById('bulkNextMonth').addEventListener('click', ()=>{ bulkCalMonth++; if(bulkCalMonth>11){bulkCalMonth=0; bulkCalYear++;} renderBulkCal(); });
+document.getElementById('bulkPasteBtn').addEventListener('click', async ()=>{
+  if(!dayClipboard || bulkPicked.size===0){ showToast('日付を選んでください'); return; }
+  bulkPicked.forEach(date=>{
+    dayClipboard.items.forEach(it=>{
+      events.push({id:uid(), clubId:currentClubId, date, place:it.place, timeStart:it.timeStart, timeEnd:it.timeEnd, note:it.note, color:it.color, status:'open', confirmedIds:[], createdAt:Date.now()});
+    });
+  });
+  await saveEvents();
+  document.getElementById('bulkPasteModal').classList.add('hidden');
+  renderMonth(); renderToday(); renderDayModalBody(); renderNewEventArea();
+  showToast(`${bulkPicked.size}日に貼り付けました`);
+});
+
 async function onDayAction(e){
   const el = e.currentTarget; const act = el.dataset.act; const evId = el.dataset.ev;
   const ev = events.find(x=>x.id===evId); if(!ev && act!=='rmResp') return;
@@ -886,7 +1084,7 @@ async function onDayAction(e){
   }else if(act==='rmResp'){
     const rId = el.dataset.resp;
     responses = responses.filter(r=>r.id!==rId);
-    await saveResponses(); showToast('取り消しました');
+    await saveResponses(); showToast('削除しました');
   }else if(act==='togglePick'){
     const sid = el.dataset.staff;
     ev.confirmedIds = ev.confirmedIds || [];
@@ -905,16 +1103,15 @@ async function onDayAction(e){
     const sid = sel.value; if(!sid) return;
     responses.push({id:uid(), eventId:evId, staffId:sid, timeStart:null, timeEnd:null, createdAt:Date.now()});
     await saveResponses(); showToast('追加しました');
-  }else if(act==='crossAdd'){
+  }else if(act==='sendRequest'){
     const sid = el.dataset.staff;
-    responses.push({id:uid(), eventId:evId, staffId:sid, timeStart:null, timeEnd:null, createdAt:Date.now()});
-    ev.confirmedIds = ev.confirmedIds || [];
-    if(!ev.confirmedIds.includes(sid) && ev.status==='confirmed') ev.confirmedIds.push(sid);
-    await saveResponses(); await saveEvents(); showToast('追加しました');
+    requests.push({id:uid(), eventId:evId, staffId:sid, requestedBy: isAdmin()?'admin':mySid, status:'pending', createdAt:Date.now()});
+    await saveRequests(); showToast('依頼を送りました。OKが来ると登録されます');
   }else if(act==='delEv'){
     events = events.filter(x=>x.id!==evId);
     responses = responses.filter(r=>r.eventId!==evId);
-    await saveEvents(); await saveResponses(); showToast('削除しました');
+    requests = requests.filter(r=>r.eventId!==evId);
+    await saveEvents(); await saveResponses(); await saveRequests(); showToast('削除しました');
   }else if(act==='editEv'){
     toggleEditForm(evId); return;
   }
@@ -926,6 +1123,7 @@ function toggleEditForm(evId){
   if(area.innerHTML){ area.innerHTML=''; return; }
   area.innerHTML = `
     <div class="new-ev-form">
+      <div class="field"><label>場所</label><input type="text" id="edPlace-${evId}" value="${esc(ev.place||'')}"></div>
       <div class="two-col">
         <div class="field"><label>開始</label><input type="time" id="edStart-${evId}" value="${ev.timeStart||''}"></div>
         <div class="field"><label>終了</label><input type="time" id="edEnd-${evId}" value="${ev.timeEnd||''}"></div>
@@ -942,6 +1140,7 @@ function toggleEditForm(evId){
     edArea.querySelectorAll('.swatch').forEach(s=>s.classList.toggle('active', s.dataset.c===edArea.dataset.color));
   }));
   document.getElementById('saveEd-'+evId).addEventListener('click', async ()=>{
+    ev.place = document.getElementById('edPlace-'+evId).value.trim();
     ev.timeStart = document.getElementById('edStart-'+evId).value || null;
     ev.timeEnd = document.getElementById('edEnd-'+evId).value || null;
     ev.note = document.getElementById('edNote-'+evId).value.trim();
@@ -977,17 +1176,25 @@ function renderDisplaySettings(){
   }));
 }
 
-/* ---------- staff modal ---------- */
+/* ---------- staff modal (admin manages sport / main club / password) ---------- */
 function renderStaffModal(){
   renderDisplaySettings();
+  if(!isAdmin()){
+    document.getElementById('staffList').innerHTML = `<div class="empty-note">スタッフの管理は管理者のみ行えます。</div>`;
+    document.getElementById('addStaffForm').innerHTML = '';
+    return;
+  }
   document.getElementById('staffList').innerHTML = config.staff.map(s=>{
-    const canEditClubs = isAdmin() || s.id===myStaffId();
-    const clubNames = (s.clubIds||[]).map(id=>{const c=clubById(id); return c?c.name.replace(/中学校/,''):'';}).join('、') || '未登録';
+    const sportName = s.sport ? (SPORTS.find(sp=>sp.id===s.sport)||{}).name : '未設定';
+    const mainClub = s.mainClubId ? (clubById(s.mainClubId)||{}).name : '未設定';
     return `<div class="staff-row">
-      <span class="cdot" style="background:${s.color}"></span><span class="nm">${esc(s.name)}<br><span style="font-size:10.5px; color:var(--ink-soft); font-weight:600;">対応: ${esc(clubNames)}</span></span>
-      ${canEditClubs ? `<button class="small-btn" data-act="editclubs" data-id="${s.id}">クラブ編集</button>` : ''}
-      ${isAdmin() ? `<button class="small-btn danger" data-act="delstaff" data-id="${s.id}">削除</button>` : ''}
-      <div class="club-check-panel hidden" id="clubPanel-${s.id}"></div>
+      <div class="staff-row-top">
+        <span class="cdot" style="background:${s.color}"></span>
+        <div class="nm">${esc(s.name)}<div class="staff-sub">種目: ${esc(sportName)} ／ メイン: ${esc(mainClub)} ／ パスワード: ${s.password?'設定済み':'未設定'}</div></div>
+        <button class="small-btn" data-act="editdetail" data-id="${s.id}">詳細</button>
+        <button class="small-btn danger" data-act="delstaff" data-id="${s.id}">削除</button>
+      </div>
+      <div class="club-check-panel hidden" id="detailPanel-${s.id}"></div>
     </div>`;
   }).join('') || '<div class="empty-note">スタッフが登録されていません</div>';
   document.querySelectorAll('#staffList [data-act="delstaff"]').forEach(el=> el.addEventListener('click', async ()=>{
@@ -995,54 +1202,125 @@ function renderStaffModal(){
     config.staff = config.staff.filter(s=>s.id!==id);
     events.forEach(e=>{ if(e.confirmedIds) e.confirmedIds = e.confirmedIds.filter(x=>x!==id); });
     responses = responses.filter(r=>r.staffId!==id);
-    await saveConfig(); await saveEvents(); await saveResponses();
+    requests = requests.filter(r=>r.staffId!==id);
+    await saveConfig(); await saveEvents(); await saveResponses(); await saveRequests();
     renderStaffModal(); renderMonth(); renderToday();
   }));
-  document.querySelectorAll('#staffList [data-act="editclubs"]').forEach(el=> el.addEventListener('click', ()=> toggleClubPanel(el.dataset.id)));
+  document.querySelectorAll('#staffList [data-act="editdetail"]').forEach(el=> el.addEventListener('click', ()=> toggleDetailPanel(el.dataset.id)));
+  renderAddStaffForm();
 }
-function toggleClubPanel(staffId){
-  const panel = document.getElementById('clubPanel-'+staffId);
+function toggleDetailPanel(staffId){
+  const panel = document.getElementById('detailPanel-'+staffId);
   if(!panel.classList.contains('hidden')){ panel.classList.add('hidden'); panel.innerHTML=''; return; }
   const st = staffById(staffId); if(!st) return;
-  if(!st.clubIds) st.clubIds = [];
-  let html = '';
-  SPORTS.forEach(sp=>{
-    html += `<div class="sport-group-label">${esc(sp.name)}</div>`;
-    clubsBySport(sp.id).forEach(c=>{
-      const checked = st.clubIds.includes(c.id);
-      html += `<div class="club-check-row"><input type="checkbox" data-cid="${c.id}" data-sid="${staffId}" ${checked?'checked':''}> <label>${esc(c.name)}</label></div>`;
-    });
-  });
-  panel.innerHTML = html;
+  renderDetailPanelContent(panel, st);
   panel.classList.remove('hidden');
-  panel.querySelectorAll('input[type=checkbox]').forEach(cb=> cb.addEventListener('change', async ()=>{
-    const s = staffById(cb.dataset.sid);
-    if(!s.clubIds) s.clubIds = [];
-    if(cb.checked){ if(!s.clubIds.includes(cb.dataset.cid)) s.clubIds.push(cb.dataset.cid); }
-    else{ s.clubIds = s.clubIds.filter(x=>x!==cb.dataset.cid); }
+}
+function renderDetailPanelContent(panel, st){
+  const sport = st.sport || SPORTS[0].id;
+  panel.innerHTML = `
+    <div class="field"><label>担当種目</label>
+      <div class="sport-choice">
+        ${SPORTS.map(sp=>`<button class="btn outline ${sp.id===sport?'active':''}" data-dsport="${sp.id}">${esc(sp.name)}</button>`).join('')}
+      </div>
+    </div>
+    <div class="field"><label>メインクラブ</label><select id="mainClubSel-${st.id}"></select></div>
+    <div class="sport-group-label">対応できるクラブ（同じ種目内・掛け持ち可）</div>
+    <div id="clubChecks-${st.id}"></div>
+    <div class="field" style="margin-top:8px;"><label>パスワード</label><input type="password" id="pwInput-${st.id}" value="${esc(st.password||'')}" placeholder="パスワードを設定"></div>
+    <button class="btn primary block" id="saveDetail-${st.id}">保存する</button>
+  `;
+  function fillClubOptions(sportId){
+    const clubs = clubsBySport(sportId);
+    document.getElementById(`mainClubSel-${st.id}`).innerHTML = clubs.map(c=>`<option value="${c.id}" ${c.id===st.mainClubId?'selected':''}>${esc(c.name)}</option>`).join('');
+    document.getElementById(`clubChecks-${st.id}`).innerHTML = clubs.map(c=>{
+      const checked = (st.clubIds||[]).includes(c.id);
+      return `<div class="club-check-row"><input type="checkbox" data-cid="${c.id}" ${checked?'checked':''}> <label>${esc(c.name)}</label></div>`;
+    }).join('');
+  }
+  fillClubOptions(sport);
+  panel.querySelectorAll('[data-dsport]').forEach(b=> b.addEventListener('click', ()=>{
+    panel.querySelectorAll('[data-dsport]').forEach(x=>x.classList.toggle('active', x===b));
+    fillClubOptions(b.dataset.dsport);
+  }));
+  document.getElementById('saveDetail-'+st.id).addEventListener('click', async ()=>{
+    const chosenSportBtn = panel.querySelector('[data-dsport].active');
+    st.sport = chosenSportBtn ? chosenSportBtn.dataset.dsport : sport;
+    st.mainClubId = document.getElementById(`mainClubSel-${st.id}`).value;
+    st.clubIds = Array.from(panel.querySelectorAll(`#clubChecks-${st.id} input:checked`)).map(cb=>cb.dataset.cid);
+    st.password = document.getElementById('pwInput-'+st.id).value;
     await saveConfig();
     renderStaffModal();
-    showToast('更新しました');
-  }));
+    showToast('保存しました');
+  });
 }
-document.getElementById('addStaffBtn').addEventListener('click', async ()=>{
-  const input = document.getElementById('newStaffName'); const name = input.value.trim(); if(!name) return;
-  config.staff.push({id:uid(), name, color:PALETTE[config.staff.length % PALETTE.length], clubIds:[]});
-  input.value=''; await saveConfig(); renderStaffModal();
-});
+function renderAddStaffForm(){
+  const area = document.getElementById('addStaffForm');
+  area.innerHTML = `
+    <div class="sec-label" style="margin-top:0;">新しいスタッフを追加</div>
+    <div class="field"><label>名前</label><input type="text" id="newStaffName" placeholder="名前を入力"></div>
+    <div class="field"><label>担当種目</label>
+      <div class="sport-choice" id="newSportChoice">
+        ${SPORTS.map((sp,i)=>`<button class="btn outline ${i===0?'active':''}" data-nsport="${sp.id}">${esc(sp.name)}</button>`).join('')}
+      </div>
+    </div>
+    <div class="field"><label>メインクラブ</label><select id="newMainClubSel"></select></div>
+    <div class="field"><label>パスワード</label><input type="password" id="newStaffPw" placeholder="パスワードを設定"></div>
+    <button class="btn primary block" id="addStaffBtn2">追加する</button>
+  `;
+  function fillNewClubOptions(sportId){
+    document.getElementById('newMainClubSel').innerHTML = clubsBySport(sportId).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  }
+  fillNewClubOptions(SPORTS[0].id);
+  area.querySelectorAll('[data-nsport]').forEach(b=> b.addEventListener('click', ()=>{
+    area.querySelectorAll('[data-nsport]').forEach(x=>x.classList.toggle('active', x===b));
+    fillNewClubOptions(b.dataset.nsport);
+  }));
+  document.getElementById('addStaffBtn2').addEventListener('click', async ()=>{
+    const name = document.getElementById('newStaffName').value.trim();
+    if(!name){ showToast('名前を入力してください'); return; }
+    const sportBtn = area.querySelector('[data-nsport].active');
+    const sport = sportBtn ? sportBtn.dataset.nsport : SPORTS[0].id;
+    const mainClubId = document.getElementById('newMainClubSel').value;
+    const password = document.getElementById('newStaffPw').value;
+    config.staff.push({id:uid(), name, color:PALETTE[config.staff.length % PALETTE.length], sport, mainClubId, clubIds:[mainClubId], password, createdAt:Date.now()});
+    await saveConfig();
+    renderStaffModal();
+    showToast('追加しました');
+  });
+}
 
 /* ---------- identity modal ---------- */
 function renderIdentityModal(){
-  document.getElementById('instructorPickList').innerHTML = config.staff.map(s=>
+  const eligible = config.staff.filter(s=>s.password);
+  document.getElementById('instructorPickList').innerHTML = eligible.map(s=>
     `<button class="btn outline block" style="margin-bottom:6px;" data-act="pickInst" data-id="${s.id}">${esc(s.name)}</button>`
-  ).join('') || '<div class="empty-note">スタッフがまだ登録されていません</div>';
-  document.querySelectorAll('#instructorPickList [data-act]').forEach(el=> el.addEventListener('click', async ()=>{
-    identity = {role:'instructor', staffId: el.dataset.id};
-    await saveIdentity(); updateRoleBtn();
-    document.getElementById('identityModal').classList.add('hidden');
-    renderMonth(); renderToday(); showToast('設定しました');
+  ).join('') || '<div class="empty-note">利用できるスタッフがまだ登録されていません</div>';
+  document.getElementById('instructorPwArea').classList.add('hidden');
+  pendingInstructorId = null;
+  document.querySelectorAll('#instructorPickList [data-act]').forEach(el=> el.addEventListener('click', ()=>{
+    pendingInstructorId = el.dataset.id;
+    const st = staffById(pendingInstructorId);
+    document.getElementById('instructorPwLabel').textContent = `${st.name}さんのパスワード`;
+    document.getElementById('instructorPwInput').value = '';
+    document.getElementById('instructorPwArea').classList.remove('hidden');
+    document.getElementById('instructorPwInput').focus();
   }));
 }
+document.getElementById('pickInstructorBtn').addEventListener('click', async ()=>{
+  if(!pendingInstructorId) return;
+  const st = staffById(pendingInstructorId);
+  const pw = document.getElementById('instructorPwInput').value;
+  if(!st || pw !== (st.password||'')){ showToast('パスワードが違います'); return; }
+  identity = {role:'instructor', staffId: st.id};
+  await saveIdentity(); updateRoleBtn();
+  currentSport = st.sport || SPORTS[0].id;
+  currentClubId = st.mainClubId || null;
+  ensureCurrentClub();
+  document.getElementById('identityModal').classList.add('hidden');
+  renderSportSelector(); renderClubRow(); renderMonth(); renderToday(); renderBoard(); renderRequestBanner(); updateSyncBadgeVisibility();
+  showToast('設定しました');
+});
 const ADMIN_PASSWORD = 'a';
 document.getElementById('showAdminPw').addEventListener('click', ()=>{
   document.getElementById('adminPwArea').classList.remove('hidden');
@@ -1056,15 +1334,8 @@ document.getElementById('pickAdmin').addEventListener('click', async ()=>{
   document.getElementById('adminPwInput').value='';
   document.getElementById('adminPwArea').classList.add('hidden');
   document.getElementById('identityModal').classList.add('hidden');
-  renderMonth(); renderToday(); renderBoard(); showToast('管理者として設定しました');
-});
-document.getElementById('quickAddBtn').addEventListener('click', async ()=>{
-  const input = document.getElementById('quickAddName'); const name = input.value.trim(); if(!name) return;
-  const newStaff = {id:uid(), name, color:PALETTE[config.staff.length % PALETTE.length], clubIds:[]};
-  config.staff.push(newStaff); await saveConfig();
-  identity = {role:'instructor', staffId:newStaff.id}; await saveIdentity(); updateRoleBtn();
-  input.value=''; document.getElementById('identityModal').classList.add('hidden');
-  renderMonth(); renderToday(); showToast('登録して設定しました');
+  renderSportSelector(); renderClubRow(); renderMonth(); renderToday(); renderBoard(); updateSyncBadgeVisibility();
+  showToast('管理者として設定しました');
 });
 document.getElementById('roleBtn').addEventListener('click', ()=>{ renderIdentityModal(); document.getElementById('identityModal').classList.remove('hidden'); });
 document.getElementById('openStaffBtn').addEventListener('click', ()=>{ renderStaffModal(); document.getElementById('staffModal').classList.remove('hidden'); });
@@ -1087,7 +1358,7 @@ function memberLabel(e){
 function buildRows(){
   return getConfirmedForMonthClub(currentYear, currentMonth).map(e=>{
     const d = new Date(e.date+'T00:00:00');
-    return [`${d.getMonth()+1}/${d.getDate()}`, wd(d), timeLabel(e), memberLabel(e), e.note||''];
+    return [`${d.getMonth()+1}/${d.getDate()}`, wd(d), e.place||'', timeLabel(e), memberLabel(e), e.note||''];
   });
 }
 document.getElementById('exportBtn').addEventListener('click', ()=> document.getElementById('exportModal').classList.remove('hidden'));
@@ -1095,7 +1366,7 @@ document.getElementById('expExcel').addEventListener('click', ()=>{
   const rows = buildRows();
   if(rows.length===0){ showToast('確定した予定がありません'); return; }
   const clubName = (clubById(currentClubId)||{}).name || '';
-  const aoa = [[clubName], ['日付','曜日','時間','担当','メモ'], ...rows];
+  const aoa = [[clubName], ['日付','曜日','場所','時間','担当','メモ'], ...rows];
   const ws = XLSX.utils.aoa_to_sheet(aoa);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, `${currentMonth+1}月`);
@@ -1112,7 +1383,7 @@ document.getElementById('expWord').addEventListener('click', ()=>{
     <body style="font-family:'MS PGothic',sans-serif;">
       <h2>${esc(clubName)}　${currentYear}年${currentMonth+1}月 月間予定（確定分）</h2>
       <table border="1" cellspacing="0" cellpadding="5" style="border-collapse:collapse; font-size:11pt;">
-        <tr>${['日付','曜日','時間','担当','メモ'].map(h=>`<th>${h}</th>`).join('')}</tr>
+        <tr>${['日付','曜日','場所','時間','担当','メモ'].map(h=>`<th>${h}</th>`).join('')}</tr>
         ${trs}
       </table>
     </body></html>`;
@@ -1129,7 +1400,7 @@ document.getElementById('expPdf').addEventListener('click', ()=>{
   const trs = rows.map(r=>`<tr>${r.map(c=>`<td>${esc(String(c))}</td>`).join('')}</tr>`).join('');
   document.getElementById('printArea').innerHTML = `
     <h2>${esc(clubName)}　${currentYear}年${currentMonth+1}月 月間予定（確定分）</h2>
-    <table><tr>${['日付','曜日','時間','担当','メモ'].map(h=>`<th>${h}</th>`).join('')}</tr>${trs}</table>`;
+    <table><tr>${['日付','曜日','場所','時間','担当','メモ'].map(h=>`<th>${h}</th>`).join('')}</tr>${trs}</table>`;
   document.getElementById('exportModal').classList.add('hidden');
   setTimeout(()=>window.print(), 150);
 });
@@ -1149,15 +1420,36 @@ document.getElementById('nextYear').addEventListener('click', ()=>{ yearViewYear
 document.querySelectorAll('[data-close]').forEach(el=> el.addEventListener('click', ()=> document.getElementById(el.dataset.close).classList.add('hidden')));
 document.querySelectorAll('.overlay').forEach(ov=> ov.addEventListener('click', e=>{ if(e.target===ov) ov.classList.add('hidden'); }));
 
+/* ---------- sync indicator ---------- */
+function updateSyncBadgeVisibility(){
+  document.getElementById('syncBadge').classList.toggle('hidden', !isAdmin());
+}
+function tickSyncIndicator(){
+  if(!isAdmin()) return;
+  const dot = document.getElementById('syncDot'); const label = document.getElementById('syncLabel');
+  const elapsed = Date.now() - lastPollSuccessAt;
+  dot.classList.remove('warn','bad');
+  if(lastPollAttemptFailed || elapsed > 20000){ dot.classList.add('bad'); label.textContent = '同期できていません'; }
+  else if(elapsed > 8000){ dot.classList.add('warn'); label.textContent = '更新待ち'; }
+  else{ label.textContent = '同期OK'; }
+}
+
 /* ---------- realtime polling ---------- */
 async function pollRefresh(){
   if(document.hidden) return;
-  await loadShared();
+  try{
+    await loadShared();
+    lastPollSuccessAt = Date.now();
+    lastPollAttemptFailed = false;
+  }catch(err){
+    lastPollAttemptFailed = true;
+  }
   const dayModalEl = document.getElementById('dayModal');
   const dayModalOpen = !dayModalEl.classList.contains('hidden');
   if(dayModalOpen && !isModalInputFocused(dayModalEl)){ renderDayModalBody(); renderNewEventArea(); }
-  renderBoard(); renderMonth(); renderToday();
+  renderBoard(); renderMonth(); renderToday(); renderRequestBanner();
   if(!document.getElementById('yearView').classList.contains('hidden')) renderYear();
+  tickSyncIndicator();
 }
 document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) pollRefresh(); });
 
@@ -1165,13 +1457,19 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) pollRef
 async function init(){
   await loadIdentity();
   await loadShared();
+  if(identity && identity.role==='instructor'){
+    const st = staffById(identity.staffId);
+    if(st){ currentSport = st.sport || SPORTS[0].id; currentClubId = st.mainClubId || null; }
+  }
   ensureCurrentClub();
   document.getElementById('loading').classList.add('hidden');
   document.getElementById('mainContent').classList.remove('hidden');
   updateRoleBtn();
-  renderBoard(); renderSportRow(); renderClubRow(); renderToday(); renderMonth();
+  updateSyncBadgeVisibility();
+  renderBoard(); renderSportSelector(); renderClubRow(); renderToday(); renderMonth(); renderRequestBanner();
   if(!identity){ renderIdentityModal(); document.getElementById('identityModal').classList.remove('hidden'); }
   pollTimer = setInterval(pollRefresh, 5000);
+  tickTimer = setInterval(tickSyncIndicator, 2000);
 }
 init();
 </script>
