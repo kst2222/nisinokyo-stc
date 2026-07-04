@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>指導シフト調整</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#F4F7F6; --panel:#FFFFFF; --ink:#182A32; --ink-soft:#5B6E74;
+  --navy:#1F4E5F; --navy-dark:#122F39; --teal:#33907B; --teal-soft:#E4F1EC;
+  --amber:#DD9F35; --amber-soft:#FBF0DC; --coral:#D1543D; --coral-soft:#FBE7E2;
+  --line:#DEE6E4; --radius:16px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{background:var(--bg); color:var(--ink); font-family:'Noto Sans JP',sans-serif; -webkit-tap-highlight-color:transparent;}
+h1,h2,h3,h4{font-family:'Zen Kaku Gothic New',sans-serif;}
+#app{max-width:920px;margin:0 auto;padding:0 0 60px;}
+
+.topbar{background:linear-gradient(155deg,var(--navy) 0%,var(--navy-dark) 100%); color:#fff; padding:16px 16px 12px; border-radius:0 0 22px 22px; position:sticky; top:0; z-index:5;}
+.toprow{display:flex; align-items:center; justify-content:space-between; gap:8px;}
+.eyebrow{font-size:11px; letter-spacing:.14em; opacity:.72; font-weight:600;}
+.topbar h1{font-size:19px; margin:2px 0 10px; font-weight:900;}
+.role-btn{border:none; background:rgba(255,255,255,.16); color:#fff; border-radius:20px; padding:6px 12px; font-size:11.5px; font-weight:700; cursor:pointer; white-space:nowrap;}
+.tabs{display:flex; gap:6px; margin-top:10px;}
+.tab{flex:1; text-align:center; padding:9px 4px; border-radius:10px; font-size:13px; font-weight:700; background:rgba(255,255,255,.10); color:#fff; border:none; cursor:pointer;}
+.tab.active{background:#fff; color:var(--navy-dark);}
+.icon-btn{border:none; background:rgba(255,255,255,.14); color:#fff; border-radius:10px; padding:9px 10px; font-size:12.5px; font-weight:700; cursor:pointer; white-space:nowrap;}
+
+.today-strip{margin:14px 16px 0; background:var(--panel); border-radius:var(--radius); padding:14px 16px; box-shadow:0 2px 10px rgba(18,47,57,.06);}
+.today-strip .lbl{font-size:11px; color:var(--ink-soft); font-weight:700;}
+.today-strip .date{font-size:16px; font-weight:900; margin:2px 0 8px;}
+.mine-badge{display:inline-block; background:var(--teal-soft); color:var(--teal); font-size:11px; font-weight:800; padding:2px 9px; border-radius:20px; margin-left:6px;}
+.empty-note{color:var(--ink-soft); font-size:12.5px; padding:4px 0;}
+
+.legend{display:flex; gap:14px; flex-wrap:wrap; padding:10px 20px 0; font-size:10.5px; color:var(--ink-soft); font-weight:600;}
+.legend span{display:inline-flex; align-items:center; gap:5px;}
+.dot{width:8px; height:8px; border-radius:50%; display:inline-block;}
+.dot.confirmed{background:var(--teal);}
+.dot.open{background:var(--amber);}
+
+.month-nav{display:flex; align-items:center; justify-content:space-between; padding:14px 16px 6px;}
+.month-nav .mtitle{font-size:16px; font-weight:900;}
+.nav-btn{border:none; background:var(--panel); width:34px; height:34px; border-radius:50%; font-size:16px; font-weight:800; cursor:pointer; box-shadow:0 1px 5px rgba(18,47,57,.08); color:var(--navy);}
+.exp-btn{border:none; background:var(--panel); border-radius:20px; padding:8px 13px; font-size:11.5px; font-weight:800; color:var(--navy); cursor:pointer; box-shadow:0 1px 5px rgba(18,47,57,.08);}
+.weekdays{display:grid; grid-template-columns:repeat(7,1fr); padding:2px 16px; font-size:11px; color:var(--ink-soft); font-weight:700; text-align:center;}
+.grid{display:grid; grid-template-columns:repeat(7,1fr); gap:5px; padding:4px 12px 16px;}
+.daycell{background:var(--panel); border-radius:10px; min-height:70px; padding:5px 4px; cursor:pointer; border:1px solid var(--line); display:flex; flex-direction:column; gap:2px;}
+.daycell.empty{background:transparent; border:none; cursor:default;}
+.daycell:active{transform:scale(.96);}
+.daycell.today{border:2px solid var(--navy);}
+.daynum{font-size:11.5px; font-weight:800; color:var(--ink-soft);}
+.daycell.today .daynum{color:var(--navy);}
+.mini-pill{font-size:9px; font-weight:700; padding:2px 4px; border-radius:5px; color:#fff; line-height:1.25; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;}
+.mini-pill.open{background:var(--amber);}
+.mini-pill.confirmed{background:var(--teal);}
+
+.year-nav{display:flex; align-items:center; justify-content:space-between; padding:14px 16px 4px;}
+.year-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:10px; padding:8px 12px 16px;}
+@media(min-width:640px){.year-grid{grid-template-columns:repeat(3,1fr);}}
+.ymonth{background:var(--panel); border-radius:12px; padding:10px; box-shadow:0 1px 6px rgba(18,47,57,.06);}
+.ymonth h4{margin:0 0 6px; font-size:12.5px; font-weight:800; cursor:pointer;}
+.ygrid{display:grid; grid-template-columns:repeat(7,1fr); gap:2px;}
+.ycell{aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:8.5px; color:var(--ink-soft); border-radius:3px; position:relative;}
+.ycell .ydots{position:absolute; bottom:1px; display:flex; gap:1px;}
+.ycell .ydots span{width:3px; height:3px; border-radius:50%;}
+
+.overlay{position:fixed; inset:0; background:rgba(18,47,57,.42); z-index:20; display:flex; align-items:flex-end; justify-content:center;}
+.overlay.hidden{display:none;}
+.sheet{background:var(--bg); width:100%; max-width:560px; border-radius:20px 20px 0 0; max-height:88vh; overflow-y:auto; padding:16px 16px 26px;}
+.sheet-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+.sheet-head h2{font-size:16px; margin:0; font-weight:900;}
+.close-x{border:none; background:var(--line); width:30px; height:30px; border-radius:50%; font-size:15px; cursor:pointer; color:var(--ink-soft);}
+
+.event-card{background:var(--panel); border-radius:14px; padding:14px 16px 16px; margin-bottom:14px; box-shadow:0 1px 6px rgba(18,47,57,.05); border-left:7px solid var(--ev-color,var(--navy));}
+.ev-num{display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:900; color:#fff; background:var(--ev-color,var(--navy)); padding:3px 11px; border-radius:20px; margin-bottom:8px;}
+.ev-top{display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:4px;}
+.ev-title{font-weight:900; font-size:17px; line-height:1.35;}
+.ev-time{font-size:19px; color:var(--ink); font-weight:800; margin:4px 0 8px; letter-spacing:.01em;}
+.ev-note{font-size:13px; color:var(--ink-soft); margin-bottom:8px;}
+.badge{font-size:12px; font-weight:800; padding:4px 11px; border-radius:20px; white-space:nowrap;}
+.badge.open{background:var(--amber-soft); color:var(--amber);}
+.badge.confirmed{background:var(--teal-soft); color:var(--teal);}
+.ev-admin-btns{display:flex; gap:4px;}
+.icon-sm{border:none; background:var(--line); border-radius:7px; width:30px; height:30px; font-size:14px; cursor:pointer; color:var(--ink-soft);}
+
+body.scale-large .ev-title{font-size:19px;}
+body.scale-large .ev-time{font-size:22px;}
+body.scale-large .resp-chip{font-size:13.5px; padding:6px 13px;}
+body.scale-large .btn{font-size:14px; padding:10px 15px;}
+body.scale-xl .ev-title{font-size:22px;}
+body.scale-xl .ev-time{font-size:26px;}
+body.scale-xl .resp-chip{font-size:15px; padding:7px 14px;}
+body.scale-xl .btn{font-size:15.5px; padding:12px 16px;}
+body.scale-xl .sec-label{font-size:13px;}
+.size-choice{display:flex; gap:6px; margin-bottom:14px;}
+.size-choice button{flex:1;}
+.size-choice button.active{background:var(--navy); color:#fff; border-color:var(--navy);}
+.color-swatches{display:flex; gap:8px; flex-wrap:wrap; margin:4px 0 8px;}
+.swatch{width:28px; height:28px; border-radius:50%; border:2px solid transparent; cursor:pointer;}
+.swatch.active{border-color:var(--ink); box-shadow:0 0 0 2px #fff inset;}
+
+.sec-label{font-size:11px; font-weight:800; color:var(--ink-soft); margin:8px 0 5px;}
+.resp-row{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px;}
+.resp-chip{border-radius:20px; padding:6px 13px; font-size:13.5px; font-weight:700; display:inline-flex; align-items:center; gap:6px; border:1.5px solid var(--line); background:#fff; color:var(--ink);}
+.resp-chip.mine{border-color:var(--teal); background:var(--teal-soft); color:var(--teal);}
+.resp-chip.confirmed-pick{background:var(--teal); color:#fff; border-color:var(--teal);}
+.resp-chip button{border:none; background:none; color:inherit; font-size:13px; cursor:pointer; padding:0; line-height:1;}
+.btn{border:none; border-radius:10px; padding:9px 14px; font-size:13.5px; font-weight:800; cursor:pointer;}
+.btn.primary{background:var(--teal); color:#fff;}
+.btn.ghost{background:var(--line); color:var(--ink);}
+.btn.outline{background:#fff; border:1.5px solid var(--navy); color:var(--navy);}
+.btn.warn{background:var(--coral-soft); color:var(--coral);}
+.btn.block{width:100%; text-align:center;}
+.row-gap{display:flex; gap:8px; flex-wrap:wrap;}
+select,input[type=text],input[type=time],input[type=date]{font-family:inherit; font-size:13px; padding:8px 10px; border-radius:8px; border:1.5px solid var(--line); background:#fff; color:var(--ink); width:100%;}
+.field{margin-bottom:8px;}
+.field label{font-size:11.5px; font-weight:700; color:var(--ink-soft); display:block; margin-bottom:4px;}
+.two-col{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+.new-ev-form{background:var(--panel); border-radius:14px; padding:12px 14px; margin-top:6px; box-shadow:0 1px 6px rgba(18,47,57,.05);}
+.check-row{display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:700; color:var(--ink-soft); margin:6px 0;}
+.divider{border-top:1px dashed var(--line); margin:10px 0;}
+
+.staff-row{display:flex; align-items:center; gap:8px; background:var(--panel); border-radius:12px; padding:9px 10px; margin-bottom:7px;}
+.staff-row .cdot{width:12px; height:12px; border-radius:50%; flex-shrink:0;}
+.staff-row .nm{flex:1; font-size:13px; font-weight:700;}
+.small-btn{border:none; background:var(--line); border-radius:7px; padding:5px 9px; font-size:11px; font-weight:700; cursor:pointer; color:var(--ink-soft);}
+.small-btn.danger{background:var(--coral-soft); color:var(--coral);}
+.inline-form{display:flex; gap:6px; margin-top:4px;}
+
+.identity-card{background:var(--panel); border-radius:16px; padding:16px; text-align:center;}
+.role-choice{display:block; width:100%; border:none; background:var(--navy); color:#fff; border-radius:12px; padding:14px; font-size:14.5px; font-weight:800; margin-bottom:10px; cursor:pointer;}
+.role-choice.alt{background:var(--teal);}
+
+.export-menu{display:flex; flex-direction:column; gap:8px;}
+.export-menu button{text-align:left;}
+
+.toast{position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:var(--navy-dark); color:#fff; padding:9px 16px; border-radius:20px; font-size:12.5px; font-weight:700; z-index:60; opacity:0; transition:.25s; pointer-events:none;}
+.toast.show{opacity:1;}
+.loading-screen{display:flex; flex-direction:column; align-items:center; justify-content:center; height:70vh; color:var(--ink-soft); gap:10px;}
+.spin{width:26px; height:26px; border:3px solid var(--line); border-top-color:var(--navy); border-radius:50%; animation:sp .8s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg);}}
+.hidden{display:none !important;}
+.shared-note{font-size:10.5px; color:var(--ink-soft); text-align:center; padding:10px 20px 0;}
+
+#printArea{display:none;}
+@media print{
+  body *{visibility:hidden;}
+  #printArea, #printArea *{visibility:visible;}
+  #printArea{display:block; position:absolute; top:0; left:0; width:100%; padding:20px;}
+  #printArea table{width:100%; border-collapse:collapse; font-size:11pt;}
+  #printArea th, #printArea td{border:1px solid #999; padding:5px 8px; text-align:left;}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="toprow">
+      <div>
+        <div class="eyebrow">指導シフト調整</div>
+        <h1 style="margin-bottom:0;">シフト調整</h1>
+      </div>
+      <button class="role-btn" id="roleBtn">あなた: 未設定</button>
+    </div>
+    <div class="tabs">
+      <button class="tab active" data-tab="month">月間</button>
+      <button class="tab" data-tab="year">年間</button>
+      <button class="icon-btn" id="openStaffBtn">設定</button>
+    </div>
+  </div>
+
+  <div id="loading" class="loading-screen"><div class="spin"></div><div>読み込み中…</div></div>
+
+  <div id="mainContent" class="hidden">
+    <div class="today-strip" id="todayStrip"></div>
+    <div class="legend">
+      <span><span class="dot open"></span>候補（未確定）</span>
+      <span><span class="dot confirmed"></span>確定</span>
+    </div>
+
+    <div id="monthView">
+      <div class="month-nav">
+        <button class="nav-btn" id="prevMonth">‹</button>
+        <div class="mtitle" id="monthTitle"></div>
+        <button class="nav-btn" id="nextMonth">›</button>
+      </div>
+      <div style="padding:0 16px;"><button class="exp-btn" id="exportBtn">📄 月間予定を出力</button></div>
+      <div class="weekdays"><div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div></div>
+      <div class="grid" id="monthGrid"></div>
+    </div>
+
+    <div id="yearView" class="hidden">
+      <div class="year-nav">
+        <button class="nav-btn" id="prevYear">‹</button>
+        <div class="mtitle" id="yearTitle"></div>
+        <button class="nav-btn" id="nextYear">›</button>
+      </div>
+      <div class="year-grid" id="yearGrid"></div>
+    </div>
+
+    <div class="shared-note">※内容はスタッフ全員にリアルタイムで共有されます（数秒ごとに自動更新）</div>
+  </div>
+</div>
+
+<div id="printArea"></div>
+
+<!-- Day modal -->
+<div class="overlay hidden" id="dayModal">
+  <div class="sheet">
+    <div class="sheet-head"><h2 id="dayModalTitle"></h2><button class="close-x" data-close="dayModal">×</button></div>
+    <div id="dayModalBody"></div>
+    <div id="newEventArea"></div>
+  </div>
+</div>
+
+<!-- Staff modal -->
+<div class="overlay hidden" id="staffModal">
+  <div class="sheet">
+    <div class="sheet-head"><h2>設定</h2><button class="close-x" data-close="staffModal">×</button></div>
+    <div id="displaySettingsArea"></div>
+    <div class="sec-label" style="margin-top:14px;">スタッフ</div>
+    <div id="staffList"></div>
+    <div class="inline-form">
+      <input type="text" id="newStaffName" placeholder="名前を入力">
+      <button class="btn primary" id="addStaffBtn">追加</button>
+    </div>
+  </div>
+</div>
+
+<!-- Identity modal -->
+<div class="overlay hidden" id="identityModal">
+  <div class="sheet">
+    <div class="sheet-head"><h2>あなたは？</h2><button class="close-x" data-close="identityModal">×</button></div>
+    <div class="identity-card">
+      <button class="role-choice" id="showAdminPw">管理者として使う</button>
+      <div id="adminPwArea" class="hidden" style="margin-bottom:12px;">
+        <div class="field" style="text-align:left;"><label>管理者パスワード</label><input type="text" id="adminPwInput" placeholder="パスワードを入力"></div>
+        <button class="btn primary block" id="pickAdmin">これで進む</button>
+      </div>
+      <div class="divider"></div>
+      <div style="font-size:12px; color:var(--ink-soft); font-weight:700; margin-bottom:8px;">指導者として使う場合、あなたの名前を選んでください</div>
+      <div id="instructorPickList" style="margin-bottom:10px;"></div>
+      <div class="inline-form">
+        <input type="text" id="quickAddName" placeholder="名前が無ければ入力して追加">
+        <button class="btn outline" id="quickAddBtn">追加して選択</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Export modal -->
+<div class="overlay hidden" id="exportModal">
+  <div class="sheet">
+    <div class="sheet-head"><h2>月間予定を出力</h2><button class="close-x" data-close="exportModal">×</button></div>
+    <div style="font-size:12px; color:var(--ink-soft); margin-bottom:10px;">表示中の月で「確定」した予定のみを出力します。</div>
+    <div class="export-menu">
+      <button class="btn outline block" id="expExcel">📊 エクセルで出力（.xlsx）</button>
+      <button class="btn outline block" id="expWord">📝 ワードで出力（.doc）</button>
+      <button class="btn outline block" id="expPdf">🖨 PDFで出力（印刷画面から保存）</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const PALETTE = ['#1F4E5F','#33907B','#DD9F35','#8E5FB0','#3D7FBF','#C1553F','#4B8A6B','#B0784B'];
+let config = {staff:[]};
+let events = [];
+let responses = [];
+let identity = null; // {role:'admin'|'instructor', staffId}
+let currentMonth = new Date().getMonth(), currentYear = new Date().getFullYear();
+let yearViewYear = new Date().getFullYear();
+let activeDayDate = null;
+let pollTimer = null;
+
+const pad = n => String(n).padStart(2,'0');
+const dstr = (y,m,d) => `${y}-${pad(m+1)}-${pad(d)}`;
+const todayStr = () => { const t=new Date(); return dstr(t.getFullYear(), t.getMonth(), t.getDate()); };
+const esc = s => (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+const wd = d => ['日','月','火','水','木','金','土'][d.getDay()];
+
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+function isModalInputFocused(modalEl){
+  const a = document.activeElement;
+  return a && modalEl.contains(a) && ['INPUT','SELECT','TEXTAREA'].includes(a.tagName);
+}
+
+/* ---------- storage ---------- */
+async function loadShared(){
+  try{ const r = await window.storage.get('sch-config', true); config = r ? JSON.parse(r.value) : {staff:[]}; }
+  catch(e){ config = {staff:[]}; }
+  if(!config.display) config.display = {fontScale:'normal'};
+  applyDisplaySettings();
+  try{ const r = await window.storage.get('sch-events', true); events = r ? JSON.parse(r.value) : []; }
+  catch(e){ events = []; }
+  try{ const r = await window.storage.get('sch-responses', true); responses = r ? JSON.parse(r.value) : []; }
+  catch(e){ responses = []; }
+}
+async function saveConfig(){ try{ await window.storage.set('sch-config', JSON.stringify(config), true); }catch(e){ showToast('保存に失敗しました'); } }
+async function saveEvents(){ try{ await window.storage.set('sch-events', JSON.stringify(events), true); }catch(e){ showToast('保存に失敗しました'); } }
+async function saveResponses(){ try{ await window.storage.set('sch-responses', JSON.stringify(responses), true); }catch(e){ showToast('保存に失敗しました'); } }
+
+async function loadIdentity(){
+  try{ const r = await window.storage.get('my-identity', false); identity = r ? JSON.parse(r.value) : null; }
+  catch(e){ identity = null; }
+}
+async function saveIdentity(){ try{ await window.storage.set('my-identity', JSON.stringify(identity), false); }catch(e){} }
+
+/* ---------- helpers ---------- */
+function staffById(id){ return config.staff.find(s=>s.id===id); }
+function isAdmin(){ return identity && identity.role==='admin'; }
+function myStaffId(){ return identity && identity.role==='instructor' ? identity.staffId : null; }
+function eventsOnDate(date){ return events.filter(e=>e.date===date); }
+function respsForEvent(evId){ return responses.filter(r=>r.eventId===evId); }
+function myResponse(evId){ const sid = myStaffId(); return sid ? responses.find(r=>r.eventId===evId && r.staffId===sid) : null; }
+function timeLabel(e){ return e.timeStart ? `${e.timeStart}〜${e.timeEnd||''}` : '時間未定（担当者ごとに登録）'; }
+function updateRoleBtn(){
+  const btn = document.getElementById('roleBtn');
+  if(!identity){ btn.textContent = 'あなた: 未設定'; return; }
+  if(identity.role==='admin'){ btn.textContent = 'あなた: 管理者'; }
+  else{ const st = staffById(identity.staffId); btn.textContent = 'あなた: ' + (st ? st.name : '指導者'); }
+}
+
+/* ---------- today strip ---------- */
+function renderToday(){
+  const t = todayStr(); const today = new Date();
+  const label = `${today.getFullYear()}年${today.getMonth()+1}月${today.getDate()}日（${wd(today)}）`;
+  const todays = eventsOnDate(t);
+  let html = `<div class="lbl">本日</div><div class="date">${label}</div>`;
+  if(todays.length===0){ html += `<div class="empty-note">本日の予定はまだありません</div>`; }
+  else{
+    todays.forEach(e=>{
+      const mine = myStaffId() && e.confirmedIds && e.confirmedIds.includes(myStaffId());
+      html += `<div style="display:flex; align-items:center; gap:8px; padding:6px 0; border-top:1px solid var(--line);">
+        <div style="flex:1; font-size:12.5px; font-weight:700;">${esc(e.school)}（${esc(e.activity)}）${mine?'<span class="mine-badge">あなたが担当</span>':''}</div>
+        <span class="badge ${e.status}">${e.status==='confirmed'?'確定':'候補'}</span>
+      </div>`;
+    });
+  }
+  document.getElementById('todayStrip').innerHTML = html;
+}
+
+/* ---------- month view ---------- */
+function getMonthMatrix(year, month){
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const cells = [];
+  for(let i=0;i<firstDay;i++) cells.push(null);
+  for(let d=1; d<=daysInMonth; d++) cells.push(d);
+  while(cells.length % 7 !== 0) cells.push(null);
+  return cells;
+}
+function renderMonth(){
+  document.getElementById('monthTitle').textContent = `${currentYear}年 ${currentMonth+1}月`;
+  const cells = getMonthMatrix(currentYear, currentMonth); const t = todayStr();
+  let html = '';
+  cells.forEach(d=>{
+    if(d===null){ html += `<div class="daycell empty"></div>`; return; }
+    const date = dstr(currentYear, currentMonth, d);
+    const isToday = date===t;
+    const dayEvents = eventsOnDate(date);
+    let pills = '';
+    dayEvents.slice(0,3).forEach((e,idx)=>{
+      const label = e.status==='confirmed'
+        ? (e.confirmedIds||[]).map(id=>{const s=staffById(id); return s?s.name.slice(0,2):'';}).join('・') || '確定'
+        : `候補`;
+      const bg = e.color || PALETTE[idx % PALETTE.length];
+      pills += `<div class="mini-pill ${e.status}" style="background:${bg};">${esc(e.activity.slice(0,4))}:${esc(label)}</div>`;
+    });
+    html += `<div class="daycell ${isToday?'today':''}" data-date="${date}"><div class="daynum">${d}</div>${pills}</div>`;
+  });
+  document.getElementById('monthGrid').innerHTML = html;
+  document.querySelectorAll('.daycell[data-date]').forEach(el=> el.addEventListener('click', ()=>openDayModal(el.dataset.date)));
+}
+
+/* ---------- year view ---------- */
+function renderYear(){
+  document.getElementById('yearTitle').textContent = `${yearViewYear}年`;
+  let html = '';
+  for(let m=0;m<12;m++){
+    const cells = getMonthMatrix(yearViewYear, m);
+    let g = '';
+    cells.forEach(d=>{
+      if(d===null){ g += `<div class="ycell"></div>`; return; }
+      const date = dstr(yearViewYear, m, d);
+      const dayEvents = eventsOnDate(date);
+      let dots = '';
+      dayEvents.slice(0,3).forEach(e=>{ dots += `<span style="background:${e.status==='confirmed'?'var(--teal)':'var(--amber)'}"></span>`; });
+      g += `<div class="ycell" data-date="${date}" data-m="${m}">${d}<div class="ydots">${dots}</div></div>`;
+    });
+    html += `<div class="ymonth"><h4 data-m="${m}">${m+1}月</h4><div class="ygrid">${g}</div></div>`;
+  }
+  document.getElementById('yearGrid').innerHTML = html;
+  document.querySelectorAll('.ymonth h4').forEach(el=> el.addEventListener('click', ()=>{ currentMonth=parseInt(el.dataset.m); currentYear=yearViewYear; switchTab('month'); renderMonth(); }));
+  document.querySelectorAll('.ycell[data-date]').forEach(el=> el.addEventListener('click', ()=>{
+    currentMonth=parseInt(el.dataset.m); currentYear=yearViewYear; switchTab('month'); renderMonth();
+    setTimeout(()=>openDayModal(el.dataset.date), 60);
+  }));
+}
+
+/* ---------- day modal ---------- */
+function openDayModal(date){
+  activeDayDate = date;
+  const d = new Date(date+'T00:00:00');
+  document.getElementById('dayModalTitle').textContent = `${d.getMonth()+1}月${d.getDate()}日（${wd(d)}）`;
+  renderDayModalBody();
+  renderNewEventArea();
+  document.getElementById('dayModal').classList.remove('hidden');
+}
+function staffOptionsHtml(excludeIds){
+  excludeIds = excludeIds || [];
+  return config.staff.filter(s=>!excludeIds.includes(s.id)).map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
+}
+function renderDayModalBody(){
+  const dayEvents = eventsOnDate(activeDayDate);
+  if(dayEvents.length===0){
+    document.getElementById('dayModalBody').innerHTML = `<div class="empty-note">この日の予定はまだありません。</div>`;
+    return;
+  }
+  let html = '';
+  dayEvents.forEach((e,idx)=>{
+    const resps = respsForEvent(e.id);
+    const mySid = myStaffId();
+    const myResp = myResponse(e.id);
+    const color = e.color || PALETTE[idx % PALETTE.length];
+    html += `<div class="event-card" data-ev="${e.id}" style="--ev-color:${color};">
+      ${dayEvents.length>1 ? `<div class="ev-num">候補${idx+1}</div>` : ''}
+      <div class="ev-top">
+        <div>
+          <div class="ev-title">${esc(e.school)}（${esc(e.activity)}）</div>
+          <div class="ev-time">🕐 ${esc(timeLabel(e))}</div>
+        </div>
+        <div style="text-align:right;">
+          <span class="badge ${e.status}">${e.status==='confirmed'?'確定':'候補'}</span>
+          ${isAdmin() ? `<div class="ev-admin-btns" style="margin-top:6px;">
+            <button class="icon-sm" data-act="editEv" data-ev="${e.id}">✎</button>
+            <button class="icon-sm" data-act="delEv" data-ev="${e.id}">🗑</button>
+          </div>` : ''}
+        </div>
+      </div>
+      ${e.note ? `<div class="ev-note">${esc(e.note)}</div>` : ''}
+      <div id="editArea-${e.id}"></div>
+
+      <div class="sec-label">指導できる人</div>
+      <div class="resp-row">`;
+
+    resps.forEach(r=>{
+      const st = staffById(r.staffId); if(!st) return;
+      const isConfirmed = e.status==='confirmed' && (e.confirmedIds||[]).includes(r.staffId);
+      const timeTxt = (!e.timeStart && r.timeStart) ? ` (${r.timeStart}-${r.timeEnd})` : '';
+      const canRemove = isAdmin() || (r.staffId===mySid && e.status!=='confirmed');
+      html += `<span class="resp-chip ${r.staffId===mySid?'mine':''} ${isConfirmed?'confirmed-pick':''}">${esc(st.name)}${timeTxt}
+        ${canRemove ? `<button data-act="rmResp" data-resp="${r.id}" data-ev="${e.id}">×</button>` : ''}
+      </span>`;
+    });
+    if(resps.length===0) html += `<span class="empty-note">まだ登録がありません</span>`;
+    html += `</div>`;
+
+    /* instructor self-registration */
+    if(!isAdmin() && mySid){
+      if(e.status==='confirmed'){
+        if((e.confirmedIds||[]).includes(mySid)) html += `<div class="empty-note" style="color:var(--teal); font-weight:700;">あなたが担当として確定しています</div>`;
+      }else if(!myResp){
+        if(e.timeStart){
+          html += `<button class="btn primary" data-act="quickResp" data-ev="${e.id}">私は指導できます</button>`;
+        }else{
+          html += `<div class="two-col">
+            <input type="time" id="myStart-${e.id}">
+            <input type="time" id="myEnd-${e.id}">
+          </div>
+          <button class="btn primary" style="margin-top:6px;" data-act="timeResp" data-ev="${e.id}">この時間で登録する</button>`;
+        }
+      }
+    }
+
+    /* admin controls */
+    if(isAdmin()){
+      html += `<div class="divider"></div><div class="sec-label">担当を確定する</div>
+        <div class="resp-row" data-pickzone="${e.id}">`;
+      resps.forEach(r=>{
+        const st = staffById(r.staffId); if(!st) return;
+        const picked = (e.confirmedIds||[]).includes(r.staffId);
+        html += `<button class="resp-chip ${picked?'confirmed-pick':''}" data-act="togglePick" data-ev="${e.id}" data-staff="${r.staffId}" type="button">${esc(st.name)}</button>`;
+      });
+      html += `</div>
+        <div class="row-gap">
+          <button class="btn primary" data-act="confirmEv" data-ev="${e.id}">${e.status==='confirmed'?'確定内容を更新':'この内容で確定する'}</button>
+          ${e.status==='confirmed' ? `<button class="btn ghost" data-act="reopenEv" data-ev="${e.id}">候補に戻す</button>` : ''}
+        </div>
+        <div class="sec-label" style="margin-top:10px;">他のスタッフを登録に追加</div>
+        <div class="inline-form">
+          <select id="addRespSel-${e.id}">${staffOptionsHtml(resps.map(r=>r.staffId))}</select>
+          <button class="btn outline" data-act="adminAddResp" data-ev="${e.id}">追加</button>
+        </div>`;
+    }
+    html += `</div>`;
+  });
+  document.getElementById('dayModalBody').innerHTML = html;
+  document.querySelectorAll('#dayModalBody [data-act]').forEach(el=> el.addEventListener('click', onDayAction));
+}
+function renderNewEventArea(){
+  if(!isAdmin()){ document.getElementById('newEventArea').innerHTML=''; return; }
+  document.getElementById('newEventArea').innerHTML = `
+    <div class="new-ev-form">
+      <div class="sec-label" style="margin-top:0;">＋ 候補を追加（この日に複数案OK・目安3件まで）</div>
+      <div class="two-col">
+        <div class="field"><label>学校名</label><input type="text" id="nvSchool" list="schoolList" placeholder="例：上京中学校"></div>
+        <div class="field"><label>活動</label><input type="text" id="nvActivity" list="activityList" placeholder="例：ソフトテニス"></div>
+      </div>
+      <div class="check-row"><input type="checkbox" id="nvNoTime"> <label for="nvNoTime" style="margin:0;">時間は未定（担当者ごとに登録してもらう）</label></div>
+      <div class="two-col" id="nvTimeRow">
+        <div class="field"><label>開始</label><input type="time" id="nvStart"></div>
+        <div class="field"><label>終了</label><input type="time" id="nvEnd"></div>
+      </div>
+      <div class="field"><label>メモ（任意）</label><input type="text" id="nvNote" placeholder="持ち物・注意事項など"></div>
+      <div class="field"><label>色（複数候補の見分け用）</label>
+        <div class="color-swatches" id="nvColorRow"></div>
+      </div>
+      <button class="btn primary block" id="addEvBtn">この候補を追加する</button>
+    </div>
+    <datalist id="schoolList">${[...new Set(events.map(e=>e.school))].map(s=>`<option value="${esc(s)}">`).join('')}</datalist>
+    <datalist id="activityList">${[...new Set(events.map(e=>e.activity))].map(s=>`<option value="${esc(s)}">`).join('')}</datalist>
+  `;
+  const dayCount = eventsOnDate(activeDayDate).length;
+  const nvArea = document.getElementById('newEventArea');
+  nvArea.dataset.color = PALETTE[dayCount % PALETTE.length];
+  document.getElementById('nvColorRow').innerHTML = PALETTE.map(c=>`<span class="swatch ${c===nvArea.dataset.color?'active':''}" style="background:${c}" data-c="${c}"></span>`).join('');
+  document.querySelectorAll('#nvColorRow .swatch').forEach(sw=> sw.addEventListener('click', ()=>{
+    nvArea.dataset.color = sw.dataset.c;
+    document.querySelectorAll('#nvColorRow .swatch').forEach(s=>s.classList.toggle('active', s.dataset.c===nvArea.dataset.color));
+  }));
+  document.getElementById('nvNoTime').addEventListener('change', e=>{
+    document.getElementById('nvTimeRow').style.display = e.target.checked ? 'none' : 'grid';
+  });
+  document.getElementById('addEvBtn').addEventListener('click', addNewEvent);
+}
+async function addNewEvent(){
+  const school = document.getElementById('nvSchool').value.trim();
+  const activity = document.getElementById('nvActivity').value.trim();
+  if(!school || !activity){ showToast('学校名と活動を入力してください'); return; }
+  const noTime = document.getElementById('nvNoTime').checked;
+  const timeStart = noTime ? null : (document.getElementById('nvStart').value || null);
+  const timeEnd = noTime ? null : (document.getElementById('nvEnd').value || null);
+  const note = document.getElementById('nvNote').value.trim();
+  const color = document.getElementById('newEventArea').dataset.color || PALETTE[0];
+  events.push({id:uid(), date:activeDayDate, school, activity, timeStart, timeEnd, note, color, status:'open', confirmedIds:[], createdAt:Date.now()});
+  await saveEvents();
+  renderDayModalBody(); renderNewEventArea(); renderMonth(); renderToday();
+  showToast('候補を追加しました');
+}
+async function onDayAction(e){
+  const el = e.currentTarget; const act = el.dataset.act; const evId = el.dataset.ev;
+  const ev = events.find(x=>x.id===evId); if(!ev && act!=='rmResp') return;
+  const mySid = myStaffId();
+  if(act==='quickResp'){
+    responses.push({id:uid(), eventId:evId, staffId:mySid, timeStart:null, timeEnd:null, createdAt:Date.now()});
+    await saveResponses(); showToast('登録しました');
+  }else if(act==='timeResp'){
+    const s = document.getElementById('myStart-'+evId).value, en = document.getElementById('myEnd-'+evId).value;
+    if(!s || !en){ showToast('時間を入力してください'); return; }
+    responses.push({id:uid(), eventId:evId, staffId:mySid, timeStart:s, timeEnd:en, createdAt:Date.now()});
+    await saveResponses(); showToast('登録しました');
+  }else if(act==='rmResp'){
+    const rId = el.dataset.resp;
+    responses = responses.filter(r=>r.id!==rId);
+    await saveResponses(); showToast('取り消しました');
+  }else if(act==='togglePick'){
+    const sid = el.dataset.staff;
+    ev.confirmedIds = ev.confirmedIds || [];
+    if(ev.confirmedIds.includes(sid)) ev.confirmedIds = ev.confirmedIds.filter(x=>x!==sid);
+    else ev.confirmedIds.push(sid);
+    await saveEvents();
+  }else if(act==='confirmEv'){
+    if(!ev.confirmedIds || ev.confirmedIds.length===0){ showToast('担当を1人以上選んでください'); return; }
+    ev.status = 'confirmed';
+    await saveEvents(); showToast('確定しました');
+  }else if(act==='reopenEv'){
+    ev.status = 'open';
+    await saveEvents(); showToast('候補に戻しました');
+  }else if(act==='adminAddResp'){
+    const sel = document.getElementById('addRespSel-'+evId);
+    const sid = sel.value; if(!sid) return;
+    responses.push({id:uid(), eventId:evId, staffId:sid, timeStart:null, timeEnd:null, createdAt:Date.now()});
+    await saveResponses(); showToast('追加しました');
+  }else if(act==='delEv'){
+    events = events.filter(x=>x.id!==evId);
+    responses = responses.filter(r=>r.eventId!==evId);
+    await saveEvents(); await saveResponses(); showToast('削除しました');
+  }else if(act==='editEv'){
+    toggleEditForm(evId); return;
+  }
+  renderDayModalBody(); renderNewEventArea(); renderMonth(); renderToday();
+}
+function toggleEditForm(evId){
+  const ev = events.find(x=>x.id===evId); if(!ev) return;
+  const area = document.getElementById('editArea-'+evId);
+  if(area.innerHTML){ area.innerHTML=''; return; }
+  area.innerHTML = `
+    <div class="new-ev-form">
+      <div class="two-col">
+        <div class="field"><label>学校名</label><input type="text" id="edSchool-${evId}" value="${esc(ev.school)}"></div>
+        <div class="field"><label>活動</label><input type="text" id="edActivity-${evId}" value="${esc(ev.activity)}"></div>
+      </div>
+      <div class="two-col">
+        <div class="field"><label>開始</label><input type="time" id="edStart-${evId}" value="${ev.timeStart||''}"></div>
+        <div class="field"><label>終了</label><input type="time" id="edEnd-${evId}" value="${ev.timeEnd||''}"></div>
+      </div>
+      <div class="field"><label>メモ</label><input type="text" id="edNote-${evId}" value="${esc(ev.note||'')}"></div>
+      <div class="field"><label>色</label><div class="color-swatches" id="edColorRow-${evId}"></div></div>
+      <button class="btn primary block" id="saveEd-${evId}">保存する</button>
+    </div>`;
+  const edArea = document.getElementById('editArea-'+evId);
+  edArea.dataset.color = ev.color || PALETTE[0];
+  document.getElementById('edColorRow-'+evId).innerHTML = PALETTE.map(c=>`<span class="swatch ${c===edArea.dataset.color?'active':''}" style="background:${c}" data-c="${c}"></span>`).join('');
+  edArea.querySelectorAll('.swatch').forEach(sw=> sw.addEventListener('click', ()=>{
+    edArea.dataset.color = sw.dataset.c;
+    edArea.querySelectorAll('.swatch').forEach(s=>s.classList.toggle('active', s.dataset.c===edArea.dataset.color));
+  }));
+  document.getElementById('saveEd-'+evId).addEventListener('click', async ()=>{
+    ev.school = document.getElementById('edSchool-'+evId).value.trim() || ev.school;
+    ev.activity = document.getElementById('edActivity-'+evId).value.trim() || ev.activity;
+    ev.timeStart = document.getElementById('edStart-'+evId).value || null;
+    ev.timeEnd = document.getElementById('edEnd-'+evId).value || null;
+    ev.note = document.getElementById('edNote-'+evId).value.trim();
+    ev.color = edArea.dataset.color;
+    await saveEvents();
+    renderDayModalBody(); renderMonth(); renderToday();
+    showToast('変更しました');
+  });
+}
+
+/* ---------- display settings ---------- */
+function applyDisplaySettings(){
+  document.body.classList.remove('scale-large','scale-xl');
+  const scale = (config.display && config.display.fontScale) || 'normal';
+  if(scale==='large') document.body.classList.add('scale-large');
+  if(scale==='xl') document.body.classList.add('scale-xl');
+}
+function renderDisplaySettings(){
+  const area = document.getElementById('displaySettingsArea');
+  if(!isAdmin()){ area.innerHTML=''; return; }
+  const scale = (config.display && config.display.fontScale) || 'normal';
+  area.innerHTML = `
+    <div class="sec-label" style="margin-top:0;">文字の大きさ（全員の画面に反映されます）</div>
+    <div class="size-choice">
+      <button class="btn outline ${scale==='normal'?'active':''}" data-sc="normal">標準</button>
+      <button class="btn outline ${scale==='large'?'active':''}" data-sc="large">大きめ</button>
+      <button class="btn outline ${scale==='xl'?'active':''}" data-sc="xl">とても大きい</button>
+    </div>`;
+  area.querySelectorAll('[data-sc]').forEach(b=> b.addEventListener('click', async ()=>{
+    config.display.fontScale = b.dataset.sc;
+    await saveConfig(); applyDisplaySettings(); renderDisplaySettings();
+    showToast('文字の大きさを変更しました');
+  }));
+}
+
+/* ---------- staff modal ---------- */
+function renderStaffModal(){
+  renderDisplaySettings();
+  document.getElementById('staffList').innerHTML = config.staff.map(s=>`
+    <div class="staff-row"><span class="cdot" style="background:${s.color}"></span><span class="nm">${esc(s.name)}</span>
+    <button class="small-btn danger" data-act="delstaff" data-id="${s.id}">削除</button></div>`).join('') || '<div class="empty-note">スタッフが登録されていません</div>';
+  document.querySelectorAll('#staffList [data-act]').forEach(el=> el.addEventListener('click', async ()=>{
+    const id = el.dataset.id;
+    config.staff = config.staff.filter(s=>s.id!==id);
+    events.forEach(e=>{ if(e.confirmedIds) e.confirmedIds = e.confirmedIds.filter(x=>x!==id); });
+    responses = responses.filter(r=>r.staffId!==id);
+    await saveConfig(); await saveEvents(); await saveResponses();
+    renderStaffModal(); renderMonth(); renderToday();
+  }));
+}
+document.getElementById('addStaffBtn').addEventListener('click', async ()=>{
+  const input = document.getElementById('newStaffName'); const name = input.value.trim(); if(!name) return;
+  config.staff.push({id:uid(), name, color:PALETTE[config.staff.length % PALETTE.length]});
+  input.value=''; await saveConfig(); renderStaffModal();
+});
+
+/* ---------- identity modal ---------- */
+function renderIdentityModal(){
+  document.getElementById('instructorPickList').innerHTML = config.staff.map(s=>
+    `<button class="btn outline block" style="margin-bottom:6px;" data-act="pickInst" data-id="${s.id}">${esc(s.name)}</button>`
+  ).join('') || '<div class="empty-note">スタッフがまだ登録されていません</div>';
+  document.querySelectorAll('#instructorPickList [data-act]').forEach(el=> el.addEventListener('click', async ()=>{
+    identity = {role:'instructor', staffId: el.dataset.id};
+    await saveIdentity(); updateRoleBtn();
+    document.getElementById('identityModal').classList.add('hidden');
+    renderMonth(); renderToday(); showToast('設定しました');
+  }));
+}
+const ADMIN_PASSWORD = 'a';
+document.getElementById('showAdminPw').addEventListener('click', ()=>{
+  document.getElementById('adminPwArea').classList.remove('hidden');
+  document.getElementById('adminPwInput').focus();
+});
+document.getElementById('pickAdmin').addEventListener('click', async ()=>{
+  const pw = document.getElementById('adminPwInput').value;
+  if(pw !== ADMIN_PASSWORD){ showToast('パスワードが違います'); return; }
+  identity = {role:'admin', staffId:null};
+  await saveIdentity(); updateRoleBtn();
+  document.getElementById('adminPwInput').value='';
+  document.getElementById('adminPwArea').classList.add('hidden');
+  document.getElementById('identityModal').classList.add('hidden');
+  renderMonth(); renderToday(); showToast('管理者として設定しました');
+});
+document.getElementById('quickAddBtn').addEventListener('click', async ()=>{
+  const input = document.getElementById('quickAddName'); const name = input.value.trim(); if(!name) return;
+  const newStaff = {id:uid(), name, color:PALETTE[config.staff.length % PALETTE.length]};
+  config.staff.push(newStaff); await saveConfig();
+  identity = {role:'instructor', staffId:newStaff.id}; await saveIdentity(); updateRoleBtn();
+  input.value=''; document.getElementById('identityModal').classList.add('hidden');
+  renderMonth(); renderToday(); showToast('登録して設定しました');
+});
+document.getElementById('roleBtn').addEventListener('click', ()=>{ renderIdentityModal(); document.getElementById('identityModal').classList.remove('hidden'); });
+document.getElementById('openStaffBtn').addEventListener('click', ()=>{ renderStaffModal(); document.getElementById('staffModal').classList.remove('hidden'); });
+
+/* ---------- export ---------- */
+function getConfirmedForMonth(y,m){
+  return events.filter(e=>{ const d=new Date(e.date+'T00:00:00'); return e.status==='confirmed' && d.getFullYear()===y && d.getMonth()===m; })
+    .sort((a,b)=>a.date.localeCompare(b.date));
+}
+function memberLabel(e){
+  return (e.confirmedIds||[]).map(id=>{
+    const st = staffById(id); if(!st) return '';
+    if(!e.timeStart){
+      const r = responses.find(x=>x.eventId===e.id && x.staffId===id);
+      if(r && r.timeStart) return `${st.name}(${r.timeStart}-${r.timeEnd})`;
+    }
+    return st.name;
+  }).filter(Boolean).join('、') || '（担当未設定）';
+}
+function buildRows(){
+  return getConfirmedForMonth(currentYear, currentMonth).map(e=>{
+    const d = new Date(e.date+'T00:00:00');
+    return [`${d.getMonth()+1}/${d.getDate()}`, wd(d), e.school, e.activity, timeLabel(e), memberLabel(e), e.note||''];
+  });
+}
+document.getElementById('exportBtn').addEventListener('click', ()=> document.getElementById('exportModal').classList.remove('hidden'));
+document.getElementById('expExcel').addEventListener('click', ()=>{
+  const rows = buildRows();
+  if(rows.length===0){ showToast('確定した予定がありません'); return; }
+  const aoa = [['日付','曜日','学校','活動','時間','担当','メモ'], ...rows];
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, `${currentMonth+1}月`);
+  XLSX.writeFile(wb, `月間予定_${currentYear}_${currentMonth+1}.xlsx`);
+  document.getElementById('exportModal').classList.add('hidden');
+});
+document.getElementById('expWord').addEventListener('click', ()=>{
+  const rows = buildRows();
+  if(rows.length===0){ showToast('確定した予定がありません'); return; }
+  const trs = rows.map(r=>`<tr>${r.map(c=>`<td>${esc(String(c))}</td>`).join('')}</tr>`).join('');
+  const html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+    <head><meta charset="utf-8"><title>月間予定</title></head>
+    <body style="font-family:'MS PGothic',sans-serif;">
+      <h2>${currentYear}年${currentMonth+1}月 月間予定（確定分）</h2>
+      <table border="1" cellspacing="0" cellpadding="5" style="border-collapse:collapse; font-size:11pt;">
+        <tr>${['日付','曜日','学校','活動','時間','担当','メモ'].map(h=>`<th>${h}</th>`).join('')}</tr>
+        ${trs}
+      </table>
+    </body></html>`;
+  const blob = new Blob(['\ufeff', html], {type:'application/msword'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = `月間予定_${currentYear}_${currentMonth+1}.doc`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  document.getElementById('exportModal').classList.add('hidden');
+});
+document.getElementById('expPdf').addEventListener('click', ()=>{
+  const rows = buildRows();
+  if(rows.length===0){ showToast('確定した予定がありません'); return; }
+  const trs = rows.map(r=>`<tr>${r.map(c=>`<td>${esc(String(c))}</td>`).join('')}</tr>`).join('');
+  document.getElementById('printArea').innerHTML = `
+    <h2>${currentYear}年${currentMonth+1}月 月間予定（確定分）</h2>
+    <table><tr>${['日付','曜日','学校','活動','時間','担当','メモ'].map(h=>`<th>${h}</th>`).join('')}</tr>${trs}</table>`;
+  document.getElementById('exportModal').classList.add('hidden');
+  setTimeout(()=>window.print(), 150);
+});
+
+/* ---------- nav & tabs ---------- */
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===tab));
+  document.getElementById('monthView').classList.toggle('hidden', tab!=='month');
+  document.getElementById('yearView').classList.toggle('hidden', tab!=='year');
+  if(tab==='year') renderYear();
+}
+document.querySelectorAll('.tab').forEach(t=> t.addEventListener('click', ()=>switchTab(t.dataset.tab)));
+document.getElementById('prevMonth').addEventListener('click', ()=>{ currentMonth--; if(currentMonth<0){currentMonth=11; currentYear--;} renderMonth(); });
+document.getElementById('nextMonth').addEventListener('click', ()=>{ currentMonth++; if(currentMonth>11){currentMonth=0; currentYear++;} renderMonth(); });
+document.getElementById('prevYear').addEventListener('click', ()=>{ yearViewYear--; renderYear(); });
+document.getElementById('nextYear').addEventListener('click', ()=>{ yearViewYear++; renderYear(); });
+document.querySelectorAll('[data-close]').forEach(el=> el.addEventListener('click', ()=> document.getElementById(el.dataset.close).classList.add('hidden')));
+document.querySelectorAll('.overlay').forEach(ov=> ov.addEventListener('click', e=>{ if(e.target===ov) ov.classList.add('hidden'); }));
+
+/* ---------- realtime polling ---------- */
+async function pollRefresh(){
+  if(document.hidden) return;
+  await loadShared();
+  const dayModalEl = document.getElementById('dayModal');
+  const dayModalOpen = !dayModalEl.classList.contains('hidden');
+  if(dayModalOpen && !isModalInputFocused(dayModalEl)){ renderDayModalBody(); renderNewEventArea(); }
+  renderMonth(); renderToday();
+  if(!document.getElementById('yearView').classList.contains('hidden')) renderYear();
+}
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) pollRefresh(); });
+
+/* ---------- init ---------- */
+async function init(){
+  await loadIdentity();
+  await loadShared();
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('mainContent').classList.remove('hidden');
+  updateRoleBtn();
+  renderToday(); renderMonth();
+  if(!identity){ renderIdentityModal(); document.getElementById('identityModal').classList.remove('hidden'); }
+  pollTimer = setInterval(pollRefresh, 5000);
+}
+init();
+</script>
+</body>
+</html>
